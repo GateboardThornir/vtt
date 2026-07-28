@@ -1,0 +1,33 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# Node
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+appsettings.Development.local.json
+
+# Claude Code personal instructions (not shared)
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Editors
+.vs/
+.idea/
+*.swp
+.DS_Store
+
+# Uploaded assets in local development
+uploads/
