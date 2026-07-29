@@ -1,0 +1,21 @@
+<Project>
+
+  <!-- Imported automatically by every project below this directory, so the build contract lives
+       in one place instead of drifting between csproj files as projects are added. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- A nullability warning ignored on day one is a NullReferenceException in a live session
+         two years from now. Cheap to adopt while the codebase is empty, expensive later. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+
+    <!-- Style rules are enforced by the IDE and `dotnet format`, deliberately not by the build:
+         formatting should never be the reason a build fails mid-task. -->
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+</Project>

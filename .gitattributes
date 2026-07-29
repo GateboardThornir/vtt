@@ -1,0 +1,15 @@
+# Development happens WSL2-side, but the host is Windows and files occasionally get touched from
+# it. Normalising to LF on commit keeps line endings out of diffs.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.mp3 binary
+*.ogg binary

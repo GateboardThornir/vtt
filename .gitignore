@@ -6,6 +6,7 @@ obj/
 [Dd]ebug/
 [Rr]elease/
 artifacts/
+TestResults/
 
 # Node
 node_modules/
@@ -23,9 +24,13 @@ appsettings.Development.local.json
 CLAUDE.local.md
 .claude/settings.local.json
 
+# Docker
+docker-compose.override.yml
+
 # Editors
 .vs/
 .idea/
+.vscode/
 *.swp
 .DS_Store
 
