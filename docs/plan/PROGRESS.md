@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 0 — Foundations
-**Next task:** 001 — Repository scaffold
+**Next task:** 002 — Docker Compose dev environment
 **Blocked on:** nothing
 
 ## Completed
@@ -18,7 +18,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 
 | ID | Task | Date | Notes |
 |---|---|---|---|
-| — | — | — | — |
+| 001 | Repository scaffold | 2026-07-29 | Layout and build conventions in ADR 001. Server on port 5080, `/health` live |
 
 ## Deviations from the plan
 
@@ -43,4 +43,5 @@ Work consciously postponed, with the task it should attach to.
 
 | Item | Deferred to | Reason |
 |---|---|---|
-| — | — | — |
+| Automated test for `GET /health` | 005 | Endpoint testing is 005's subject; 001 ships a placeholder test and verifies `/health` by hand |
+| `dotnet format --verify-no-changes` gate | 006 | Style is not enforced by the build, so CI is where drift gets caught |
