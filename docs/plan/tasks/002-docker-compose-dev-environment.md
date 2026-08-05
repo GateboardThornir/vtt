@@ -1,6 +1,6 @@
 # 002 — Docker Compose dev environment
 
-**Status:** in review
+**Status:** done
 **Depends on:** 001
 **Branch:** `task/002-docker-compose-dev-environment`
 
