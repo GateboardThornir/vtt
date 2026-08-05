@@ -41,6 +41,14 @@ dotnet build
 ./scripts/dev-server.sh
 ```
 
+Then, in a second terminal, the frontend:
+
+```bash
+cd src/Client
+npm install
+npm run dev                   # http://localhost:5173
+```
+
 The server listens on <http://localhost:5080>. Confirm it is alive:
 
 ```bash
@@ -51,8 +59,21 @@ curl http://localhost:5080/api/health
 A 200 means the server can also reach the database. If the database is unreachable the server still
 starts and serves, and `/api/health` returns 503 naming the check that failed.
 
+The frontend at <http://localhost:5173> shows the same thing, fetched through the Vite dev proxy —
+which makes it the quickest check that both halves of the stack are talking to each other.
+
 HTTP only in development — no local HTTPS certificate to install. TLS is terminated by Caddy in
 production.
+
+### Two terminals, on purpose
+
+The server and the frontend are separate processes, and there is no script that starts both.
+Interleaved output from two watchers is harder to read than two windows, and the first thing anyone
+does when a combined script misbehaves is run the halves separately anyway.
+
+`vite.config.ts` proxies `/api` to the server, so the browser only ever sees one origin. That is
+what lets task 013's `HttpOnly`, `SameSite=Lax` session cookies work without CORS or a development
+HTTPS certificate. Details in [`src/Client/README.md`](src/Client/README.md).
 
 ### Why the script instead of `dotnet run`
 
@@ -129,13 +150,15 @@ mystifying, the cause is invisible, and the fix is always "move the project".
 | `dotnet build` | Builds the solution. Warnings are errors — a warning fails the build |
 | `dotnet test` | Runs the backend test suite |
 | `dotnet format` | Applies the `.editorconfig` conventions |
+| `npm run dev` | Frontend dev server on port 5173, from `src/Client` |
+| `npm run lint` / `npm run typecheck` | ESLint / `tsc`, from `src/Client` |
 
 ## Layout
 
 ```
 src/Server/          ASP.NET Core backend. Modular monolith: one assembly,
                      folders as module boundaries
-src/Client/          React + TypeScript frontend (arrives in task 004)
+src/Client/          React + TypeScript frontend (Vite). Proxies /api to the server
 tests/Server.Tests/  Backend tests
 scripts/             Development helpers
 docs/                Specification, architecture, roadmap, decisions
