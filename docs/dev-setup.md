@@ -261,6 +261,35 @@ git remote add origin git@github.com:<your-username>/vtt.git
 git push -u origin main
 ```
 
+### Start the database
+
+From task 002 onward the project expects PostgreSQL to be running in a container. Docker Desktop
+must be open, with WSL integration enabled (§5).
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and set `POSTGRES_PASSWORD` to anything — it never leaves your machine, and the file is
+gitignored. Then:
+
+```bash
+docker compose up -d
+docker compose ps          # postgres should read "healthy" within a few seconds
+```
+
+Start the server through the script rather than `dotnet run`: .NET does not read `.env`, and the
+script is what turns it into the connection string the server expects.
+
+```bash
+./scripts/dev-server.sh
+curl http://localhost:5080/health     # -> Healthy
+```
+
+If the container never reaches "healthy", `docker compose logs postgres` says why. The usual causes
+are port 55432 already being in use, or a stale data volume from an earlier attempt —
+`docker compose down -v` clears the second one, at the price of the local data.
+
 ---
 
 ## 10. First Claude Code session
@@ -357,7 +386,8 @@ Each of these should print something sensible from inside `~/projects/vtt`:
 pwd                 # /home/<you>/projects/vtt   — NOT /mnt/c/...
 dotnet --info       # an SDK version
 node --version      # an LTS version
-docker ps           # an empty table, not an error
+docker ps           # a table, not an error
+docker compose ps   # postgres, "healthy" (once you have run `docker compose up -d`)
 git remote -v       # your GitHub repo over SSH
 claude --version    # a version number
 ```
