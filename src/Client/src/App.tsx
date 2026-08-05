@@ -6,6 +6,7 @@ import { CampaignPage } from './campaigns/CampaignPage'
 import { CampaignsPage } from './campaigns/CampaignsPage'
 import { CharacterSheetPage } from './characters/CharacterSheetPage'
 import { CharactersPage } from './characters/CharactersPage'
+import { TablePage } from './table/TablePage'
 import { NotificationBell } from './campaigns/NotificationBell'
 import { RegisterPage } from './accounts/RegisterPage'
 import { SessionProvider } from './accounts/SessionProvider'
@@ -72,6 +73,7 @@ function SignedIn(): JSX.Element {
       <Route path="/campaigns" element={<CampaignsPage />} />
       <Route path="/campaigns/:id" element={<CampaignPage />} />
       <Route path="/campaigns/:id/characters" element={<CharactersPage />} />
+      <Route path="/campaigns/:id/sessions/:sessionId" element={<TablePage />} />
       <Route path="/campaigns/:id/characters/:characterId" element={<CharacterSheetPage />} />
       <Route
         path="/"

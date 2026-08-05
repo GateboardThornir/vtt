@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 042 — Dice expression parser + roller
+**Next task:** 050 — Asset upload service
 **Blocked on:** nothing
 
 ## Completed
@@ -46,6 +46,9 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 035 | Character sheet UI | 2026-08-05 | Raw fields editable, derived shown read-only and taken from the server's answer after each save. Schema errors rendered against the field they name. The client computes no rule |
 | 040 | SignalR hub scaffold | 2026-08-05 | Authenticated by the same session cookie; group per open session; presence counted per account so a second tab does not announce an arrival. Hub tests drive a real connection over long polling |
 | 041 | Table text chat | 2026-08-05 | Persisted then broadcast; history on join. Admission is re-checked on every send, so somebody removed from the roster mid-session stops being able to talk |
+| 042 | Dice expression parser + roller | 2026-08-05 | Server rolls, always. Every face reported so a client shows the roll rather than asserting it. Cryptographic source, bounded expressions |
+| 043 | Roll visibility | 2026-08-05 | Recipients computed per roll and sent to those accounts — never broadcast-and-hide. A hidden roll produces no event at all for the excluded. Absence tests verified by breaking the send |
+| 044 | Chat and roll UI | 2026-08-05 | One connection owned by a single manager, per the frontend rules. Rolls rendered from the server's faces and total, never recomputed |
 
 ## Deviations from the plan
 

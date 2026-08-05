@@ -1,6 +1,6 @@
 # 044 — Chat and roll UI
 
-**Status:** not started
+**Status:** done
 **Depends on:** 043
 **Branch:** `task/044-chat-and-roll-ui`
 
