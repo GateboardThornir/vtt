@@ -71,6 +71,15 @@ dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
 dotnet_naming_style.prefixed_with_i.required_prefix = I
 dotnet_naming_style.prefixed_with_i.capitalization = pascal_case
 
+# Constants are PascalCase. This rule must stay *above* the private-field rule: naming rules are
+# matched in file order and the first match wins, and a const is a field, so the underscore rule
+# below would otherwise claim every private const.
+dotnet_naming_rule.constants_are_pascal_case.severity = warning
+dotnet_naming_rule.constants_are_pascal_case.symbols = constant_symbols
+dotnet_naming_rule.constants_are_pascal_case.style = pascal_case_style
+dotnet_naming_symbols.constant_symbols.applicable_kinds = field
+dotnet_naming_symbols.constant_symbols.required_modifiers = const
+
 dotnet_naming_rule.private_fields_are_underscore_camel.severity = warning
 dotnet_naming_rule.private_fields_are_underscore_camel.symbols = private_field_symbols
 dotnet_naming_rule.private_fields_are_underscore_camel.style = underscore_camel_case
@@ -94,3 +103,16 @@ dotnet_naming_symbols.async_method_symbols.applicable_kinds = method
 dotnet_naming_symbols.async_method_symbols.required_modifiers = async
 dotnet_naming_style.ends_with_async.required_suffix = Async
 dotnet_naming_style.ends_with_async.capitalization = pascal_case
+
+# Test methods are exempt from the Async suffix. The suffix earns its place on an API surface a
+# caller has to reason about; on a test nobody calls it is a syllable with no information, and it
+# fights the rule in .claude/rules/backend.md that test names describe the behaviour asserted.
+[tests/**.cs]
+dotnet_naming_rule.async_methods_end_in_async.severity = none
+
+# Written by `dotnet ef`, not by hand. It emits a UTF-8 BOM and block-scoped namespaces, both of
+# which this file forbids elsewhere — and reformatting them achieves nothing, because the next
+# generated migration brings them straight back. Marking the directory as generated covers the
+# encoding and the analyser in one line; no per-rule overrides are needed.
+[src/Server/Infrastructure/Migrations/*.cs]
+generated_code = true
