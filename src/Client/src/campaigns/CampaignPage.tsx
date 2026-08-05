@@ -2,6 +2,12 @@ import { useEffect, useState, type FormEvent, type JSX } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 import {
+  createSession,
+  listSessions,
+  setSessionState,
+  type PlaySessionView,
+} from '../api/sessions'
+import {
   getCampaign,
   getRoster,
   inviteMember,
@@ -21,9 +27,13 @@ export function CampaignPage(): JSX.Element {
   const [missing, setMissing] = useState(false)
   const [username, setUsername] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [sessions, setSessions] = useState<PlaySessionView[]>([])
+  const [sessionTitle, setSessionTitle] = useState('')
 
   async function load(): Promise<void> {
-    const [detail, entries] = await Promise.all([getCampaign(id), getRoster(id)])
+    const [detail, entries, plays] = await Promise.all([getCampaign(id), getRoster(id), listSessions(id)])
+
+    setSessions(plays.kind === 'ok' ? plays.value : [])
 
     if (detail.kind === 'ok') {
       setCampaign(detail.value)
@@ -39,11 +49,17 @@ export function CampaignPage(): JSX.Element {
     let cancelled = false
 
     void (async () => {
-      const [detail, entries] = await Promise.all([getCampaign(id), getRoster(id)])
+      const [detail, entries, plays] = await Promise.all([
+        getCampaign(id),
+        getRoster(id),
+        listSessions(id),
+      ])
 
       if (cancelled) {
         return
       }
+
+      setSessions(plays.kind === 'ok' ? plays.value : [])
 
       if (detail.kind === 'ok') {
         setCampaign(detail.value)
@@ -75,6 +91,21 @@ export function CampaignPage(): JSX.Element {
     )
   }
 
+  async function planSession(): Promise<void> {
+    await createSession(id, sessionTitle)
+    setSessionTitle('')
+    await load()
+  }
+
+  async function changeSession(sessionId: string, state: 'Open' | 'Closed'): Promise<void> {
+    const result = await setSessionState(id, sessionId, state)
+
+    // 409 is the partial unique index refusing a second open session — a real answer, not a fault.
+    setError(result.kind === 'error' && result.status === 409 ? t('sessions.alreadyOpen') : null)
+
+    await load()
+  }
+
   if (missing) {
     return <p role="alert">{t('campaigns.notFound')}</p>
   }
@@ -97,6 +128,46 @@ export function CampaignPage(): JSX.Element {
       <p>
         <Link to={`/campaigns/${id}/characters`}>{t('characters.title')}</Link>
       </p>
+
+      <h2>{t('sessions.title')}</h2>
+      {sessions.length === 0 ? (
+        <p>{t('sessions.none')}</p>
+      ) : (
+        <ul>
+          {sessions.map((session) => (
+            <li key={session.id}>
+              {session.title} — {t(`sessions.states.${session.state}`)}
+              {/* The table only exists while a session is open, which is what the hub enforces
+                  too: a planned or closed session has no live audience. */}
+              {session.state === 'Open' && (
+                <Link to={`/campaigns/${id}/sessions/${session.id}`}>{t('sessions.enter')}</Link>
+              )}
+              {isMaster && session.state === 'Planned' && (
+                <button type="button" onClick={() => void changeSession(session.id, 'Open')}>
+                  {t('sessions.open')}
+                </button>
+              )}
+              {isMaster && session.state === 'Open' && (
+                <button type="button" onClick={() => void changeSession(session.id, 'Closed')}>
+                  {t('sessions.close')}
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {isMaster && (
+        <>
+          <label>
+            {t('sessions.titleField')}
+            <input value={sessionTitle} onChange={(event) => setSessionTitle(event.target.value)} />
+          </label>
+          <button type="button" onClick={() => void planSession()}>
+            {t('sessions.create')}
+          </button>
+        </>
+      )}
 
       <h2>{t('campaigns.roster')}</h2>
       <ul>
