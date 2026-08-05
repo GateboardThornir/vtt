@@ -1,6 +1,6 @@
 # 023 — Campaign list and detail UI
 
-**Status:** not started
+**Status:** done
 **Depends on:** 021, 022
 **Branch:** `task/023-campaign-list-and-detail-ui`
 

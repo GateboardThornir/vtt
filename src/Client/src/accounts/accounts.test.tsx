@@ -15,7 +15,14 @@ function stubFetch(routes: (url: string, method: string) => Reply): void {
   vi.stubGlobal(
     'fetch',
     vi.fn((input: string, init?: RequestInit) => {
-      const reply = routes(String(input), init?.method ?? 'GET')
+      const url = String(input)
+
+      // The shell asks for these on every signed-in render. Answering them here keeps each test's
+      // routes about the thing it is testing.
+      const reply =
+        url === '/api/notifications' || url === '/api/campaigns' || url === '/api/campaigns/invitations'
+          ? { status: 200, body: [] }
+          : routes(url, init?.method ?? 'GET')
 
       return Promise.resolve({
         ok: reply.status >= 200 && reply.status < 300,
