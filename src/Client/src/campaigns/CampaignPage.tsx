@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent, type JSX } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import {
   getCampaign,
   getRoster,
@@ -92,6 +92,10 @@ export function CampaignPage(): JSX.Element {
       <h1>{campaign.name}</h1>
       <p>
         {campaign.systemId} {campaign.systemVersion}
+      </p>
+
+      <p>
+        <Link to={`/campaigns/${id}/characters`}>{t('characters.title')}</Link>
       </p>
 
       <h2>{t('campaigns.roster')}</h2>

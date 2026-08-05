@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 035 — Character sheet UI
+**Next task:** 040 — SignalR hub scaffold
 **Blocked on:** nothing
 
 ## Completed
@@ -43,6 +43,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 032 | 5e module skeleton + sheet schema v1 | 2026-08-05 | `dnd5e 1.0.0`. Raw and derived separated in the schema; `additionalProperties` false throughout so a typo fails. `MigrateSheet` refuses unknown versions rather than passing documents through |
 | 033 | `RecomputeDerived` for 5e | 2026-08-05 | Modifiers, saves, all eighteen skills, passive perception. Floor division rather than C#'s truncation, which is the classic bug here. `derived` is replaced outright, never merged |
 | 034 | Character entity | 2026-08-05 | First JSONB column. Every write validates against the campaign's **pinned** module then recomputes derived, in the service so no path can forget |
+| 035 | Character sheet UI | 2026-08-05 | Raw fields editable, derived shown read-only and taken from the server's answer after each save. Schema errors rendered against the field they name. The client computes no rule |
 
 ## Deviations from the plan
 

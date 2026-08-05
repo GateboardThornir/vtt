@@ -1,6 +1,6 @@
 # 035 — Character sheet UI
 
-**Status:** not started
+**Status:** done
 **Depends on:** 034
 **Branch:** `task/035-character-sheet-ui`
 

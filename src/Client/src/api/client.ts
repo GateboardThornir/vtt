@@ -5,9 +5,27 @@
  * anything hardcoding a host breaks in exactly one of those.
  */
 /** Either the server answered, or it did not. Nothing in between is guessed at. */
+export interface FieldError {
+  path: string
+  message: string
+}
+
 export type ApiResult<T> =
   | { kind: 'ok'; value: T }
-  | { kind: 'error'; status: number; code?: string }
+  | {
+      kind: 'error'
+      status: number
+      code?: string
+
+      /**
+       * Per-field problems, when the server sent any.
+       *
+       * A schema failure names the path it happened at — `/abilities/strength` — which is the
+       * difference between a fixable mistake and a shrug. Carrying them here lets a screen put the
+       * message next to the input it belongs to.
+       */
+      errors?: FieldError[]
+    }
 
 export /**
  * How long to wait before deciding the server is not going to answer.
@@ -43,14 +61,21 @@ export async function request<T>(path: string, init?: RequestInit): Promise<ApiR
   // The server sends stable codes rather than English sentences, precisely so the client can
   // translate them — see task 012. `title` is where ProblemDetails puts ours.
   let code: string | undefined
+  let errors: FieldError[] | undefined
 
   try {
-    const body = (await response.json()) as { error?: string; title?: string }
+    const body = (await response.json()) as {
+      error?: string
+      title?: string
+      errors?: FieldError[]
+    }
+
     code = body.error ?? body.title
+    errors = body.errors
   } catch {
     code = undefined
   }
 
-  return { kind: 'error', status: response.status, code }
+  return { kind: 'error', status: response.status, code, errors }
 }
 
