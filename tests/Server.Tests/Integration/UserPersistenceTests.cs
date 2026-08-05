@@ -18,7 +18,7 @@ namespace Vtt.Server.Tests.Integration;
 [Trait("Category", "Integration")]
 public class UserPersistenceTests(PostgresFixture fixture) : IAsyncLifetime
 {
-    private static readonly DateTimeOffset Now = new(2026, 8, 5, 12, 0, 0, TimeSpan.Zero);
+    private static readonly DateTimeOffset _now = new(2026, 8, 5, 12, 0, 0, TimeSpan.Zero);
 
     public Task InitializeAsync() => fixture.ResetAsync();
 
@@ -27,7 +27,7 @@ public class UserPersistenceTests(PostgresFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task AUserSurvivesARoundTripThroughTheDatabase()
     {
-        var user = User.Register("Mattia", "a-hash", Now);
+        var user = User.Register("Mattia", "a-hash", _now);
 
         await using (var scope = NewScope())
         {
@@ -43,7 +43,7 @@ public class UserPersistenceTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal("mattia", stored.UsernameNormalized);
         Assert.Equal("a-hash", stored.PasswordHash);
         Assert.Equal(AccountState.Pending, stored.State);
-        Assert.Equal(Now, stored.CreatedAt);
+        Assert.Equal(_now, stored.CreatedAt);
     }
 
     [Fact]
@@ -51,7 +51,7 @@ public class UserPersistenceTests(PostgresFixture fixture) : IAsyncLifetime
     {
         await using (var scope = NewScope())
         {
-            scope.Context.Set<User>().Add(User.Register("Mattia", "a-hash", Now));
+            scope.Context.Set<User>().Add(User.Register("Mattia", "a-hash", _now));
             await scope.Context.SaveChangesAsync();
         }
 
@@ -69,12 +69,12 @@ public class UserPersistenceTests(PostgresFixture fixture) : IAsyncLifetime
     {
         await using (var scope = NewScope())
         {
-            scope.Context.Set<User>().Add(User.Register("Mattia", "a-hash", Now));
+            scope.Context.Set<User>().Add(User.Register("Mattia", "a-hash", _now));
             await scope.Context.SaveChangesAsync();
         }
 
         await using var second = NewScope();
-        second.Context.Set<User>().Add(User.Register("mattia", "another-hash", Now));
+        second.Context.Set<User>().Add(User.Register("mattia", "another-hash", _now));
 
         // The database rejects it, not application code. A check-then-insert in a service would
         // leave a window between the two statements for a concurrent registration to take the same
@@ -93,12 +93,12 @@ public class UserPersistenceTests(PostgresFixture fixture) : IAsyncLifetime
     {
         await using (var scope = NewScope())
         {
-            scope.Context.Set<User>().Add(User.Register("Mattia", "a-hash", Now));
+            scope.Context.Set<User>().Add(User.Register("Mattia", "a-hash", _now));
             await scope.Context.SaveChangesAsync();
         }
 
         await using var second = NewScope();
-        second.Context.Set<User>().Add(User.Register("Mattia", "another-hash", Now));
+        second.Context.Set<User>().Add(User.Register("Mattia", "another-hash", _now));
 
         await Assert.ThrowsAsync<DbUpdateException>(() => second.Context.SaveChangesAsync());
     }

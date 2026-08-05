@@ -1,6 +1,6 @@
 # 010 — User entity + password hashing
 
-**Status:** not started
+**Status:** in review
 **Depends on:** 006 (Phase 0 complete)
 **Branch:** `task/010-user-entity-and-password-hashing`
 
