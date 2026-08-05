@@ -56,6 +56,13 @@ export const it: typeof en = {
     state: 'Stato',
     role: 'Ruolo',
     registered: 'Registrato',
+    invites: {
+      title: 'Inviti',
+      create: 'Crea un invito',
+      linkReady: 'Manda questo link a chi vuoi invitare. Viene mostrato una sola volta e non è recuperabile.',
+      expires: 'Scade {{when}}',
+      copy: 'Copia',
+    },
     states: {
       Pending: 'In attesa',
       Active: 'Attivo',

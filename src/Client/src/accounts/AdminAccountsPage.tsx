@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState, type JSX } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
+  issueInvite,
   listAccounts,
   setAccountState,
   type AccountState,
   type AccountSummary,
+  type IssuedInvite,
 } from '../api/accounts'
 
 /**
@@ -18,6 +20,7 @@ export function AdminAccountsPage(): JSX.Element {
   const { t } = useTranslation()
   const [accounts, setAccounts] = useState<AccountSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [invite, setInvite] = useState<IssuedInvite | null>(null)
 
   const load = useCallback(async () => {
     const result = await listAccounts()
@@ -69,9 +72,34 @@ export function AdminAccountsPage(): JSX.Element {
 
   const pending = accounts.filter((account) => account.state === 'Pending')
 
+  async function createInvite(): Promise<void> {
+    const result = await issueInvite()
+
+    if (result.kind === 'ok') {
+      setInvite(result.value)
+    } else {
+      setError(t('common.unexpectedError'))
+    }
+  }
+
+  const inviteLink =
+    invite === null ? null : `${window.location.origin}/register?token=${encodeURIComponent(invite.token)}`
+
   return (
     <section>
       <h1>{t('admin.title')}</h1>
+
+      <h2>{t('admin.invites.title')}</h2>
+      <button type="button" onClick={() => void createInvite()}>
+        {t('admin.invites.create')}
+      </button>
+      {inviteLink !== null && (
+        <div>
+          <p>{t('admin.invites.linkReady')}</p>
+          {/* Read-only and selectable rather than a paragraph: the whole point is copying it. */}
+          <input readOnly value={inviteLink} aria-label={t('admin.invites.title')} />
+        </div>
+      )}
 
       <h2>{t('admin.pendingTitle')}</h2>
       {pending.length === 0 ? (

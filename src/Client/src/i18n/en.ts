@@ -56,6 +56,13 @@ export const en = {
     state: 'State',
     role: 'Role',
     registered: 'Registered',
+    invites: {
+      title: 'Invitations',
+      create: 'Create an invitation',
+      linkReady: 'Send this link to the person you are inviting. It is shown once and cannot be recovered.',
+      expires: 'Expires {{when}}',
+      copy: 'Copy',
+    },
     states: {
       Pending: 'Pending',
       Active: 'Active',
