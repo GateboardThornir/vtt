@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Time.Testing;
 using Npgsql;
 using Respawn;
 using Testcontainers.PostgreSql;
@@ -31,6 +32,25 @@ public sealed class PostgresFixture : IAsyncLifetime
     private string? _previousConnectionString;
     private WebApplicationFactory<Program>? _factory;
     private Respawner? _respawner;
+
+    /// <summary>Where the fake clock starts, before any test moves it.</summary>
+    public static readonly DateTimeOffset Start = new(2026, 8, 5, 12, 0, 0, TimeSpan.Zero);
+
+    /// <summary>
+    /// The clock the application under test reads. Advance it to test anything time-dependent.
+    /// </summary>
+    /// <remarks>
+    /// A test that proves an expiry by sleeping for the expiry period is a test nobody will keep
+    /// running.
+    /// <para>
+    /// It is shared by the collection and **only ever moves forward** — <c>FakeTimeProvider</c>
+    /// refuses to go backwards, so it is not rewound between tests. Write tests relative to
+    /// <c>Clock.GetUtcNow()</c> and never assume they start at <see cref="Start"/>: by the time one
+    /// runs, an earlier expiry test may have pushed the clock weeks ahead. That is harmless, and
+    /// closer to a real clock than a rewinding one would be.
+    /// </para>
+    /// </remarks>
+    public FakeTimeProvider Clock { get; } = new(Start);
 
     public WebApplicationFactory<Program> Factory =>
         _factory ?? throw new InvalidOperationException("The fixture has not been initialised.");
@@ -63,7 +83,7 @@ public sealed class PostgresFixture : IAsyncLifetime
         _previousConnectionString = Environment.GetEnvironmentVariable(EnvironmentVariable);
         Environment.SetEnvironmentVariable(EnvironmentVariable, _container.GetConnectionString());
 
-        _factory = new WebApplicationFactory<Program>();
+        _factory = new TestApplicationFactory(Clock);
 
         // Through the application's own service provider, so this also proves AddVttDatabase
         // registered the context correctly. Applying migrations here does not contradict ADR 003:

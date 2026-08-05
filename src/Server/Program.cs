@@ -8,6 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 // confusing failure on the first request that needs the database.
 var connectionString = DatabaseConnectionString.Resolve(builder.Configuration);
 
+// Application-wide rather than an Accounts concern, even though Accounts is currently its only
+// consumer. Injecting the clock is what lets an expiry test move time instead of sleeping.
+builder.Services.AddSingleton(TimeProvider.System);
+
 builder.Services.AddVttDatabase(connectionString);
 builder.Services.AddAccounts();
 
