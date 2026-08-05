@@ -4,6 +4,14 @@ import type { Session } from '../api/accounts'
 export interface SessionState {
   session: Session | null
   loading: boolean
+
+  /**
+   * The server could not be reached at all.
+   *
+   * Distinct from "not signed in": showing a sign-in form to somebody whose backend is down invites
+   * them to type a password at nothing and conclude their credentials are wrong.
+   */
+  unreachable: boolean
   refresh: () => Promise<void>
   signOut: () => Promise<void>
 }

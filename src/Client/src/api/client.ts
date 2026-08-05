@@ -9,6 +9,16 @@ export type ApiResult<T> =
   | { kind: 'ok'; value: T }
   | { kind: 'error'; status: number; code?: string }
 
+export /**
+ * How long to wait before deciding the server is not going to answer.
+ *
+ * Without this the client waits forever. A dead backend is not always a refused connection: under
+ * WSL2 a connection to a port nothing is listening on can be accepted and then simply never
+ * answered, and the browser has no default timeout — so the screen sits on "Loading…"
+ * indefinitely rather than saying anything.
+ */
+const timeoutMs = 10_000
+
 export async function request<T>(path: string, init?: RequestInit): Promise<ApiResult<T>> {
   let response: Response
 
@@ -16,8 +26,11 @@ export async function request<T>(path: string, init?: RequestInit): Promise<ApiR
     response = await fetch(path, {
       ...init,
       headers: { 'Content-Type': 'application/json', ...init?.headers },
+      signal: AbortSignal.timeout(timeoutMs),
     })
   } catch {
+    // Both a refused connection and a timeout land here as status 0: the caller cannot reach the
+    // server, and why is not something the UI can act on differently.
     return { kind: 'error', status: 0 }
   }
 

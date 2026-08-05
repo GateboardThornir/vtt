@@ -13,12 +13,15 @@ import { SessionContext } from './sessionContext'
 export function SessionProvider({ children }: { children: ReactNode }): JSX.Element {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [unreachable, setUnreachable] = useState(false)
 
   const refresh = useCallback(async () => {
     const result = await getSession()
 
-    // A 401 here is the ordinary answer for "not signed in", not an error to report.
+    // A 401 here is the ordinary answer for "not signed in", not an error to report. Status 0 is
+    // different: the request never reached a server.
     setSession(result.kind === 'ok' ? result.value : null)
+    setUnreachable(result.kind === 'error' && result.status === 0)
     setLoading(false)
   }, [])
 
@@ -37,6 +40,7 @@ export function SessionProvider({ children }: { children: ReactNode }): JSX.Elem
 
       if (!cancelled) {
         setSession(result.kind === 'ok' ? result.value : null)
+        setUnreachable(result.kind === 'error' && result.status === 0)
         setLoading(false)
       }
     })()
@@ -47,6 +51,6 @@ export function SessionProvider({ children }: { children: ReactNode }): JSX.Elem
   }, [])
 
   return (
-    <SessionContext value={{ session, loading, refresh, signOut }}>{children}</SessionContext>
+    <SessionContext value={{ session, loading, unreachable, refresh, signOut }}>{children}</SessionContext>
   )
 }

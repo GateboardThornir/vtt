@@ -104,6 +104,17 @@ describe('signing in', () => {
 
     expect(await screen.findByRole('heading', { name: /waiting for approval/i })).toBeInTheDocument()
   })
+
+  it('says the server is unreachable rather than offering a sign-in form', async () => {
+    // A dead backend is not "wrong password". Offering the form would invite typing a password at
+    // nothing and concluding the credentials were bad.
+    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('connection refused'))))
+
+    renderAt('/')
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/cannot reach the server/i)
+    expect(screen.queryByRole('heading', { name: /sign in/i })).not.toBeInTheDocument()
+  })
 })
 
 describe('registering', () => {

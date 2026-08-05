@@ -12,6 +12,7 @@ export const en = {
     signOut: 'Sign out',
     loading: 'Loading…',
     language: 'Language',
+    serverUnreachable: 'Cannot reach the server. It may not be running.',
     unexpectedError: 'Something went wrong. Please try again.',
   },
   signIn: {
