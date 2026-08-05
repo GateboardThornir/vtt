@@ -9,8 +9,8 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 010 — User entity + password hashing
-**Blocked on:** nothing
+**Next task:** 011 — Invite tokens
+**Blocked on:** nothing, but see the first-administrator question below — it must be answered by 012
 
 ## Completed
 
@@ -24,6 +24,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 004 | Frontend scaffold | 2026-08-05 | Vite 8 + React 19 + TS 6 on port 5173, `/api` proxied to 5080. Health endpoint moved to `/api/health`. ESLint kept over the template's new Oxlint default, which pins TS to 6.0.x |
 | 005 | Test harness | 2026-08-05 | Testcontainers + `WebApplicationFactory` (ADR 005), Vitest + jsdom. `dotnet test` now needs Docker; `--filter "Category!=Integration"` is the fast subset |
 | 006 | CI pipeline | 2026-08-05 | GitHub Actions, two parallel jobs, green on first run. Turning on the format gate exposed six existing violations, all fixed in `.editorconfig` rather than in the code |
+| 010 | User entity + password hashing | 2026-08-05 | First domain table and first module folder. Identity declined, its hasher adopted (ADR 006). EF derived the table name `user`, a PostgreSQL reserved word — caught by reading the migration, fixed with an explicit `ToTable("users")` |
 
 ## Deviations from the plan
 
@@ -50,7 +51,7 @@ Work consciously postponed, with the task it should attach to.
 
 | Item | Deferred to | Reason |
 |---|---|---|
-| Database cleanup between integration tests (Respawn or equivalent) | 010 | No domain tables exist yet, so there is nothing to reset. Attaches to the task that creates the first one |
+| Table naming for every later entity | each entity's own configuration | 010 set `ToTable("users")` explicitly because EF derived `user`, a reserved word. EF does not pluralise, so **every** entity configuration must name its table — `architecture.md` specifies plural names throughout |
 | Coverage measurement and thresholds | when there is domain logic worth covering | A coverage number over a codebase with no rules engine is theatre |
 | End-to-end browser testing | when a flow exists that is worth driving | The frontend is one diagnostic page; 017's auth screens are the first candidate |
 | Confirming the no-Docker failure message against a genuinely stopped Docker | next time Docker Desktop is restarted | 005 could not simulate it: `DOCKER_HOST` overrides are ignored by Testcontainers' socket discovery, and Docker Desktop runs Windows-side. An explicit guard in `PostgresFixture` makes the message deterministic, verified by forcing a container start failure — but the real stopped-Docker path is untested |
