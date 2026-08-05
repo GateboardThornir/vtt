@@ -13,6 +13,10 @@
 
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.10" />
 
+    <!-- No package reference is needed for PasswordHasher<T>: Microsoft.Extensions.Identity.Core
+         ships inside the ASP.NET Core shared framework, and adding it explicitly is an NU1510
+         error. ASP.NET Core Identity proper is deliberately not adopted — see ADR 006. -->
+
     <!-- Design-time only: `dotnet ef` needs it to build migrations, the running server does not
          ship it. PrivateAssets stops it flowing to anything referencing this project. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">

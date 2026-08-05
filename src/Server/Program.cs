@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Vtt.Server.Accounts;
 using Vtt.Server.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = DatabaseConnectionString.Resolve(builder.Configuration);
 
 builder.Services.AddVttDatabase(connectionString);
+builder.Services.AddAccounts();
 
 // CanConnectAsync against the registered context, run per request to /api/health — no background
 // timer and no connection held open between probes.
