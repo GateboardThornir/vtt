@@ -25,7 +25,7 @@ public class Invite
 
     public Guid Id { get; private set; }
 
-    /// <summary>Hash of the token, per <see cref="InviteToken.Hash"/>. Never the token itself.</summary>
+    /// <summary>Hash of the token, per <see cref="SecureToken.Hash"/>. Never the token itself.</summary>
     public string TokenHash { get; private set; } = null!;
 
     public Guid CreatedByUserId { get; private set; }

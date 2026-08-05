@@ -18,7 +18,8 @@ public static class AccountServices
             .AddScoped<IInviteService, InviteService>()
             .AddScoped<IRegistrationService, RegistrationService>()
             .AddScoped<ISignInService, SignInService>()
-            .AddScoped<IAccountAdministration, AccountAdministration>();
+            .AddScoped<IAccountAdministration, AccountAdministration>()
+            .AddScoped<IRecoveryService, RecoveryService>();
 
     /// <summary>
     /// Registers cookie authentication. Separate from <see cref="AddAccounts"/> because it needs to

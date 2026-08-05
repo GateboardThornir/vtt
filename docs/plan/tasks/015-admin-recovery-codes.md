@@ -1,6 +1,6 @@
 # 015 — Admin recovery codes
 
-**Status:** not started
+**Status:** done
 **Depends on:** 014 (an administrator to issue them)
 **Branch:** `task/015-admin-recovery-codes`
 

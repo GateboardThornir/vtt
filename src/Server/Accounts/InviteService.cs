@@ -9,8 +9,8 @@ internal sealed class InviteService(VttDbContext context, TimeProvider clock) : 
         Guid createdByUserId,
         CancellationToken cancellationToken = default)
     {
-        var token = InviteToken.Generate();
-        var invite = Invite.Issue(InviteToken.Hash(token), createdByUserId, clock.GetUtcNow());
+        var token = SecureToken.Generate();
+        var invite = Invite.Issue(SecureToken.Hash(token), createdByUserId, clock.GetUtcNow());
 
         context.Set<Invite>().Add(invite);
         await context.SaveChangesAsync(cancellationToken);
@@ -42,7 +42,7 @@ internal sealed class InviteService(VttDbContext context, TimeProvider clock) : 
         // window: PostgreSQL serialises the row, and exactly one caller sees a row affected.
         var affected = await context.Set<Invite>()
             .Where(invite =>
-                invite.TokenHash == InviteToken.Hash(token) &&
+                invite.TokenHash == SecureToken.Hash(token) &&
                 invite.ConsumedAt == null &&
                 invite.ExpiresAt > now)
             .ExecuteUpdateAsync(
@@ -70,7 +70,7 @@ internal sealed class InviteService(VttDbContext context, TimeProvider clock) : 
     private Task<Invite?> FindAsync(string token, CancellationToken cancellationToken) =>
         context.Set<Invite>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(invite => invite.TokenHash == InviteToken.Hash(token), cancellationToken);
+            .SingleOrDefaultAsync(invite => invite.TokenHash == SecureToken.Hash(token), cancellationToken);
 
     private static InviteStatus Classify(Invite? invite, DateTimeOffset now) => invite switch
     {

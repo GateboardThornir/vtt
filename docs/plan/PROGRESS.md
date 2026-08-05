@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 015 — Admin recovery codes
+**Next task:** 016 — Authorization policies
 **Blocked on:** nothing
 
 ## Completed
@@ -29,6 +29,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 012 | Registration via invite URL | 2026-08-05 | Endpoint plus the `create-account` bootstrap command (ADR 008), closing the gap open since 010. Registration is one transaction: without it, eight parallel racers left eight orphaned accounts |
 | 013 | Login / logout | 2026-08-05 | Cookie sessions carrying identity only. Wrong password and unknown username answer identically; state is checked only after the password verifies. First consumer of 010's rehash signal |
 | 014 | Admin approval queue | 2026-08-05 | Platform role column moved here from 016 — an approval queue anyone can call is not one. Approve, reject, disable and re-enable are one guarded transition. Roles read per request, never from the cookie |
+| 015 | Admin recovery codes | 2026-08-05 | Admin-mediated recovery with no email anywhere. `SecureToken` extracted now that 011 and 015 give two examples — the identical part only. Recovery restores the password and nothing else |
 
 ## Deviations from the plan
 
@@ -60,6 +61,7 @@ Work consciously postponed, with the task it should attach to.
 | Coverage measurement and thresholds | when there is domain logic worth covering | A coverage number over a codebase with no rules engine is theatre |
 | End-to-end browser testing | when a flow exists that is worth driving | The frontend is one diagnostic page; 017's auth screens are the first candidate |
 | Confirming the no-Docker failure message against a genuinely stopped Docker | next time Docker Desktop is restarted | 005 could not simulate it: `DOCKER_HOST` overrides are ignored by Testcontainers' socket discovery, and Docker Desktop runs Windows-side. An explicit guard in `PostgresFixture` makes the message deterministic, verified by forcing a container start failure — but the real stopped-Docker path is untested |
+| Invalidating live sessions when a password is reset | with the session work, or 102 | 015 changes the password but cannot evict anyone already holding the cookie. Fixing it needs a value in the cookie that a reset can invalidate — real, and not something to bolt onto the recovery flow |
 | Login rate limiting and lockout after repeated failures | when the platform is deployed, or 102 | 013 ships no lockout, so passwords can be tried indefinitely. Acceptable for an undeployed private tool; not acceptable once it is reachable |
 | Persisting data protection keys | 101 | 013's session cookie is signed with keys that default to the local filesystem. A container without a persistent volume regenerates them on restart and silently signs everybody out |
 | Connection string for IDE-launched debugging | when it first bites | `scripts/dev-server.sh` covers the terminal; `appsettings.Development.local.json` is already gitignored for the other case |

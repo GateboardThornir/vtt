@@ -111,7 +111,7 @@ public class RegistrationTests(PostgresFixture fixture) : IAsyncLifetime
     {
         // Distinguishing "expired" from "used" tells a real holder why their link failed. Saying
         // whether an arbitrary string is a token at all would tell an attacker something instead.
-        var response = await PostAsync(InviteToken.Generate(), "Newcomer", GoodPassword);
+        var response = await PostAsync(SecureToken.Generate(), "Newcomer", GoodPassword);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("invite_invalid", await ErrorOf(response));

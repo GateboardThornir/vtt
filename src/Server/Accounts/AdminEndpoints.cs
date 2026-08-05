@@ -14,6 +14,7 @@ public static class AdminEndpoints
         group.MapGet("/", ListAllAsync);
         group.MapGet("/pending", ListPendingAsync);
         group.MapPut("/{id:guid}/state", SetStateAsync);
+        group.MapPost("/{id:guid}/recovery-code", IssueRecoveryCodeAsync);
 
         return endpoints;
     }
@@ -62,6 +63,34 @@ public static class AdminEndpoints
                     TransitionResult.NoSuchAccount => TypedResults.NotFound(),
                     _ => TypedResults.Conflict("That account cannot move to that state."),
                 };
+        }
+    }
+
+    private static async Task<Results<Ok<IssuedRecoveryCode>, NotFound, UnauthorizedHttpResult, ForbidHttpResult>>
+        IssueRecoveryCodeAsync(
+            Guid id,
+            ClaimsPrincipal principal,
+            IAccountAdministration accounts,
+            IRecoveryService recovery,
+            CancellationToken cancellationToken)
+    {
+        switch (await CheckAsync(principal, accounts, cancellationToken))
+        {
+            case Access.Unauthenticated:
+                return TypedResults.Unauthorized();
+
+            case Access.Forbidden:
+                return TypedResults.Forbid();
+
+            default:
+                var issued = await recovery.IssueAsync(
+                    id,
+                    SessionCookie.UserIdOf(principal)!.Value,
+                    cancellationToken);
+
+                // Shown once. The administrator passes it on out of band and never learns the
+                // password chosen with it.
+                return issued is null ? TypedResults.NotFound() : TypedResults.Ok(issued);
         }
     }
 

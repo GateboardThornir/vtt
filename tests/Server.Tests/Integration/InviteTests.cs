@@ -46,7 +46,7 @@ public class InviteTests(PostgresFixture fixture) : IAsyncLifetime
 
         Assert.NotNull(row);
         Assert.DoesNotContain(issued.Token, row, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(InviteToken.Hash(issued.Token), row, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(SecureToken.Hash(issued.Token), row, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -123,8 +123,8 @@ public class InviteTests(PostgresFixture fixture) : IAsyncLifetime
     [Fact]
     public async Task AnUnknownTokenIsRejected()
     {
-        Assert.Equal(InviteStatus.NotFound, await ValidateAsync(InviteToken.Generate()));
-        Assert.Equal(InviteStatus.NotFound, await ConsumeAsync(InviteToken.Generate()));
+        Assert.Equal(InviteStatus.NotFound, await ValidateAsync(SecureToken.Generate()));
+        Assert.Equal(InviteStatus.NotFound, await ConsumeAsync(SecureToken.Generate()));
     }
 
     [Fact]
