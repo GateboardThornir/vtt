@@ -10,5 +10,10 @@ public static class AccountServices
     /// <c>Program.cs</c> grows a line per module rather than a line per service.
     /// </remarks>
     public static IServiceCollection AddAccounts(this IServiceCollection services) =>
-        services.AddSingleton<IPasswordHasher, IdentityPasswordHasher>();
+        services
+            .AddSingleton<IPasswordHasher, IdentityPasswordHasher>()
+
+            // Scoped, not singleton: it holds a DbContext, which is scoped per request and is not
+            // thread-safe.
+            .AddScoped<IInviteService, InviteService>();
 }
