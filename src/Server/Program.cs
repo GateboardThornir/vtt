@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Vtt.Server.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,15 +7,21 @@ var builder = WebApplication.CreateBuilder(args);
 // confusing failure on the first request that needs the database.
 var connectionString = DatabaseConnectionString.Resolve(builder.Configuration);
 
-builder.Services.AddHealthChecks();
+builder.Services.AddVttDatabase(connectionString);
+
+// CanConnectAsync against the registered context, run per request to /health — no background
+// timer and no connection held open between probes.
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<VttDbContext>("database");
 
 var app = builder.Build();
 
 var redactedConnectionString = DatabaseConnectionString.Redact(connectionString);
 StartupLog.DatabaseConfigured(app.Logger, redactedConnectionString);
 
-// Health checks rather than a plain MapGet: task 002 needs a container probe and task 003 a
-// database readiness check, and both attach here without changing the endpoint contract.
-app.MapHealthChecks("/health");
+// 200 here now means "this instance can serve a request that touches the database", which is what
+// a proxy or a container probe actually wants to know. The trade is that a 503 no longer
+// distinguishes a dead process from an unreachable database, so the body names the failing check.
+app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthCheckResponse.Write });
 
 app.Run();

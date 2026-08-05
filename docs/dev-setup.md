@@ -288,13 +288,65 @@ Start the server through the script rather than `dotnet run`: .NET does not read
 script is what turns it into the connection string the server expects.
 
 ```bash
+./scripts/ef.sh database update       # create/update the schema — see below
 ./scripts/dev-server.sh
-curl http://localhost:5080/health     # -> Healthy
+curl http://localhost:5080/health
+# -> {"status":"Healthy","checks":{"database":"Healthy"}}
 ```
+
+A 200 from `/health` means the process is up **and** it can reach the database. Stop the container
+and the server keeps running, but `/health` turns into a 503 naming the check that failed. That is
+the intended behaviour: an unreachable database is a condition to report, not a reason to crash.
 
 If the container never reaches "healthy", `docker compose logs postgres` says why. The usual causes
 are port 55432 already being in use, or a stale data volume from an earlier attempt —
 `docker compose down -v` clears the second one, at the price of the local data.
+
+### Working with migrations
+
+The database schema is not written by hand. You change the C# model, and EF Core generates a
+**migration**: a class with an `Up` method describing the change and a `Down` method undoing it.
+Alongside them EF keeps a *model snapshot* — its picture of what the schema currently looks like —
+and the database keeps a `__EFMigrationsHistory` table listing which migrations it has run. Those
+three things together are what let a migration be generated once and applied anywhere.
+
+Always go through `scripts/ef.sh` rather than `dotnet ef`. The tools build the server and run
+`Program.cs` as far as `builder.Build()`, so the connection-string check runs at design time too;
+the script supplies the same environment `dev-server.sh` does.
+
+```bash
+./scripts/ef.sh migrations add AddSomething --output-dir Infrastructure/Migrations
+./scripts/ef.sh database update
+./scripts/ef.sh migrations list
+```
+
+**Read the generated file before committing it.** EF infers the migration by diffing your model
+against the last snapshot, and the diff is not always the change you had in mind — renaming a
+property looks exactly like dropping one column and adding another, which is a silent data loss if
+you apply it without looking.
+
+**Fixing a migration you got wrong.** Before it is merged this is cheap:
+
+```bash
+./scripts/ef.sh database update 0    # revert to an empty database (or name an earlier migration)
+./scripts/ef.sh migrations remove    # delete it and roll the snapshot back
+```
+
+Run `migrations remove` on a migration that is still applied and it refuses:
+
+> The migration '...' has already been applied to the database. Revert it and try again.
+
+That is the tool enforcing the order, not an error to work around. Note that `remove` needs the
+database reachable, because it checks what is applied — running it with the container down leaves
+the snapshot and the database disagreeing about reality.
+
+**After a migration is merged to `main`, it is frozen.** Correct it with a *new* migration, never by
+editing the old one. Anyone who has already applied it has a row in `__EFMigrationsHistory` and will
+never run that file again, so an edit changes the schema for new databases only, and the two silently
+diverge. This is the "migrations are append-only once merged" rule in `CLAUDE.md`.
+
+Migrations are never applied automatically when the server starts. That is a deliberate choice with
+consequences for deployment — [ADR 003](decisions/003-migrations-applied-explicitly.md) explains why.
 
 ---
 
