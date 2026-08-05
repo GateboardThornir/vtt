@@ -1,6 +1,6 @@
 # 042 — Dice expression parser + roller
 
-**Status:** not started
+**Status:** done
 **Depends on:** 041
 **Branch:** `task/042-dice-parser-and-roller`
 

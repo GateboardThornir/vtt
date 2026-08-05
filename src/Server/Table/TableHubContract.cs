@@ -24,4 +24,15 @@ public interface ITableClient
 
     /// <summary>Recent history, sent to a client when it joins.</summary>
     Task ChatHistory(IReadOnlyList<ChatLine> lines);
+
+    /// <summary>
+    /// A roll this recipient is entitled to see.
+    /// </summary>
+    /// <remarks>
+    /// Sent to computed recipients rather than to the group. A hidden roll produces no event at all
+    /// for the people excluded — see <c>RollService</c>.
+    /// </remarks>
+    Task Rolled(RollLine roll);
+
+    Task RollHistory(IReadOnlyList<RollLine> rolls);
 }
