@@ -2,6 +2,9 @@ import { type JSX } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, Route, Routes } from 'react-router'
 import { AdminAccountsPage } from './accounts/AdminAccountsPage'
+import { CampaignPage } from './campaigns/CampaignPage'
+import { CampaignsPage } from './campaigns/CampaignsPage'
+import { NotificationBell } from './campaigns/NotificationBell'
 import { RegisterPage } from './accounts/RegisterPage'
 import { SessionProvider } from './accounts/SessionProvider'
 import { useSession } from './accounts/sessionContext'
@@ -25,6 +28,7 @@ function Shell(): JSX.Element {
       <header>
         <strong>{t('common.appName')}</strong>
         <LanguageSwitcher />
+        {session !== null && <NotificationBell />}
         {session !== null && (
           <button type="button" onClick={() => void signOut()}>
             {t('common.signOut')}
@@ -53,11 +57,14 @@ function SignedIn(): JSX.Element {
   return (
     <Routes>
       <Route path="/admin/accounts" element={<AdminAccountsPage />} />
+      <Route path="/campaigns" element={<CampaignsPage />} />
+      <Route path="/campaigns/:id" element={<CampaignPage />} />
       <Route
         path="/"
         element={
           <section>
             <p>{t('home.signedInAs', { username: session?.username ?? '' })}</p>
+            <Link to="/campaigns">{t('home.campaignsLink')}</Link>
             {/* Offered to everyone: the server refuses members regardless, and the client has
                 no business deciding permissions. Hiding it would be a guess about the answer. */}
             <Link to="/admin/accounts">{t('home.adminLink')}</Link>
