@@ -1,6 +1,6 @@
 # 011 — Invite tokens
 
-**Status:** not started
+**Status:** in review
 **Depends on:** 010 (an account to attribute an invite to)
 **Branch:** `task/011-invite-tokens`
 
