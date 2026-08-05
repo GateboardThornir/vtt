@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Vtt.Server.Accounts;
 using Vtt.Server.Campaigns;
+using Vtt.Server.Characters;
 using Vtt.Server.Infrastructure;
 using Vtt.Server.Notifications;
 using Vtt.Server.Sessions;
@@ -23,6 +24,7 @@ builder.Services.AddCampaigns();
 builder.Services.AddNotifications();
 builder.Services.AddPlaySessions();
 builder.Services.AddGameSystems();
+builder.Services.AddCharacters();
 builder.Services.AddSessionCookie(builder.Environment.IsDevelopment());
 
 // Enums travel as their names, not their ordinals. A payload saying "state": 1 forces every client
@@ -59,6 +61,7 @@ app.MapAccountAdministration();
 app.MapCampaigns();
 app.MapNotifications();
 app.MapPlaySessions();
+app.MapCharacters();
 
 // Under /api so the Vite dev proxy needs one prefix (task 004) and Caddy one rule (task 101): a
 // root-level path would be swallowed by the SPA's index.html fallback unless special-cased.

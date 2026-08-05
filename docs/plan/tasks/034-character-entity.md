@@ -1,6 +1,6 @@
 # 034 — Character entity
 
-**Status:** not started
+**Status:** done
 **Depends on:** 033
 **Branch:** `task/034-character-entity`
 
