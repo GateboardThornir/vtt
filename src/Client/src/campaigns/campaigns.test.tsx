@@ -174,6 +174,55 @@ describe('a campaign', () => {
     expect(screen.queryByRole('button', { name: /^invite$/i })).not.toBeInTheDocument()
   })
 
+  it('lets a Master plan and open a session, and links to the table only when it is open', async () => {
+    // The gap this closes: the table route existed and nothing reached it. A session could be
+    // created over HTTP and never through the browser, so the table was unreachable.
+    stubFetch((url) =>
+      url === '/api/campaigns/c1'
+        ? { status: 200, body: campaign }
+        : url === '/api/campaigns/c1/roster'
+          ? { status: 200, body: roster }
+          : url === '/api/campaigns/c1/sessions'
+            ? {
+                status: 200,
+                body: [
+                  { id: 's1', title: 'Session one', state: 'Open', createdAt: '', openedAt: '', closedAt: null },
+                  { id: 's2', title: 'Later', state: 'Planned', createdAt: '', openedAt: null, closedAt: null },
+                ],
+              }
+            : undefined,
+    )
+
+    renderAt('/campaigns/c1')
+
+    expect(await screen.findByRole('link', { name: /go to the table/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /open the table/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^close$/i })).toBeInTheDocument()
+  })
+
+  it('offers a Player no session controls', async () => {
+    stubFetch((url) =>
+      url === '/api/campaigns/c1'
+        ? { status: 200, body: { ...campaign, role: 'Player' } }
+        : url === '/api/campaigns/c1/roster'
+          ? { status: 200, body: roster }
+          : url === '/api/campaigns/c1/sessions'
+            ? {
+                status: 200,
+                body: [
+                  { id: 's1', title: 'Session one', state: 'Open', createdAt: '', openedAt: '', closedAt: null },
+                ],
+              }
+            : undefined,
+    )
+
+    renderAt('/campaigns/c1')
+
+    // A Player still reaches the table — they just cannot open or close it.
+    expect(await screen.findByRole('link', { name: /go to the table/i })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /open the table/i })).not.toBeInTheDocument()
+  })
+
   it('says a campaign is missing rather than showing a blank page', async () => {
     // The server answers 404 for a campaign you may not see, and never confirms one exists.
     stubFetch((url) => (url.startsWith('/api/campaigns/c9') ? { status: 404 } : undefined))

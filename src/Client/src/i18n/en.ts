@@ -130,6 +130,17 @@ export const en = {
     wisdom: 'Wisdom',
     charisma: 'Charisma',
   },
+  sessions: {
+    title: 'Sessions',
+    none: 'No sessions yet.',
+    create: 'Plan a session',
+    titleField: 'Title',
+    open: 'Open the table',
+    close: 'Close',
+    enter: 'Go to the table',
+    states: { Planned: 'Planned', Open: 'Open', Closed: 'Closed' },
+    alreadyOpen: 'Another session is already open. Close it first.',
+  },
   table: {
     title: 'Table',
     participants: 'At the table',

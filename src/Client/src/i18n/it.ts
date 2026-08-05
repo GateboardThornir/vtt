@@ -130,6 +130,17 @@ export const it: typeof en = {
     wisdom: 'Saggezza',
     charisma: 'Carisma',
   },
+  sessions: {
+    title: 'Sessioni',
+    none: 'Ancora nessuna sessione.',
+    create: 'Programma una sessione',
+    titleField: 'Titolo',
+    open: 'Apri il tavolo',
+    close: 'Chiudi',
+    enter: 'Vai al tavolo',
+    states: { Planned: 'Programmata', Open: 'Aperta', Closed: 'Chiusa' },
+    alreadyOpen: "Un'altra sessione è già aperta. Chiudila prima.",
+  },
   table: {
     title: 'Tavolo',
     participants: 'Al tavolo',

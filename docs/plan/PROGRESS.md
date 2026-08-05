@@ -49,6 +49,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 042 | Dice expression parser + roller | 2026-08-05 | Server rolls, always. Every face reported so a client shows the roll rather than asserting it. Cryptographic source, bounded expressions |
 | 043 | Roll visibility | 2026-08-05 | Recipients computed per roll and sent to those accounts — never broadcast-and-hide. A hidden roll produces no event at all for the excluded. Absence tests verified by breaking the send |
 | 044 | Chat and roll UI | 2026-08-05 | One connection owned by a single manager, per the frontend rules. Rolls rendered from the server's faces and total, never recomputed |
+| 044a | Session controls in the UI | 2026-08-05 | Second time a block finished with an API nothing could reach: 024 built sessions, 044 built the table, and nothing linked them. Plan, open, close and enter now live on the campaign page |
 
 ## Deviations from the plan
 
