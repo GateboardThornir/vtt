@@ -40,7 +40,7 @@ Exit criterion: a session is actually played end to end.
 | 014 | Admin approval queue | Approve / reject pending registrations |
 | 015 | Admin recovery codes | Single-use code lets the user set a new password; admin never sees it |
 | 016 | Authorization policies | Platform role (admin/member) + campaign role resolution helper |
-| 017 | Auth UI | Login, register-with-invite, pending screen, admin queue screen |
+| 017 | Auth UI | Login, register-with-invite, pending screen, admin queue screen. Introduces the i18next infrastructure — the first screens a user reads, so strings are translated from here on (moved from 098) |
 
 ### Campaigns
 
@@ -129,7 +129,7 @@ Goal: everything in the spec. Ends with the official release.
 | 095 | Ambient audio library + playback control | Master-controlled play/pause/seek/volume for the table |
 | 096 | Audio sync client | Clients fetch the file and obey commands — no media streaming through the server |
 | 097 | Character export | Portable JSON, player-initiated, includes system id + version |
-| 098 | i18n completion | i18next infrastructure, full IT + EN string coverage, language switcher |
+| 098 | i18n completion | Full IT + EN string coverage, language switcher. Infrastructure lands at 017, not here |
 | 099 | Deep 5e automation pass | Spellcasting, saving throws, areas of effect, concentration |
 | 100 | Backups | Nightly `pg_dump` + asset sync to R2/B2, restore procedure documented and tested |
 | 101 | Production deployment | Caddy TLS, compose on the VPS, CI deploy, environment configuration |
