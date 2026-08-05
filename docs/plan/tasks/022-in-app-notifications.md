@@ -1,6 +1,6 @@
 # 022 — In-app notifications
 
-**Status:** not started
+**Status:** done
 **Depends on:** 021 (something worth being notified about)
 **Branch:** `task/022-in-app-notifications`
 

@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Vtt.Server.Accounts;
 using Vtt.Server.Infrastructure;
+using Vtt.Server.Notifications;
 
 namespace Vtt.Server.Campaigns;
 
 internal sealed class RosterService(
     VttDbContext context,
     ICampaignRoles roles,
+    INotificationService notifications,
     TimeProvider clock) : IRosterService
 {
     public async Task<IReadOnlyList<RosterEntry>?> OfAsync(
@@ -72,6 +74,15 @@ internal sealed class RosterService(
         }
 
         await context.SaveChangesAsync(cancellationToken);
+
+        // Raised where the invitation happens, rather than through an event bus: three publishers
+        // do not justify the indirection, and the flow that knows the campaign's name is here.
+        var name = await context.Set<Campaign>()
+            .Where(campaign => campaign.Id == campaignId)
+            .Select(campaign => campaign.Name)
+            .SingleAsync(cancellationToken);
+
+        await notifications.RaiseAsync(invitee, NotificationKind.CampaignInvitation, name, cancellationToken);
 
         return RosterOutcome.Done;
     }
