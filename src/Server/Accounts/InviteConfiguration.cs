@@ -14,7 +14,7 @@ public class InviteConfiguration : IEntityTypeConfiguration<Invite>
         builder.HasKey(invite => invite.Id);
 
         builder.Property(invite => invite.TokenHash)
-            .HasMaxLength(InviteToken.HashLength)
+            .HasMaxLength(SecureToken.HashLength)
             .IsRequired();
 
         builder.Property(invite => invite.CreatedAt).IsRequired();

@@ -20,7 +20,32 @@ public static class AccountEndpoints
         endpoints.MapDelete("/api/session", (Delegate)SignOutAsync);
         endpoints.MapGet("/api/session", GetSession);
 
+        endpoints.MapPost("/api/password-reset", RedeemRecoveryCodeAsync);
+
         return endpoints;
+    }
+
+    /// <remarks>
+    /// Unauthenticated: whoever holds the code is, by construction, the person the administrator
+    /// gave it to. Every failure returns one answer, because distinguishing them would confirm to a
+    /// stranger that a code once existed for some account.
+    /// </remarks>
+    private static async Task<Results<NoContent, BadRequest<RegistrationError>>> RedeemRecoveryCodeAsync(
+        PasswordResetRequest request,
+        IRecoveryService recovery,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(request.Code) || string.IsNullOrEmpty(request.NewPassword))
+        {
+            return TypedResults.BadRequest(new RegistrationError("code_invalid"));
+        }
+
+        return await recovery.RedeemAsync(request.Code, request.NewPassword, cancellationToken) switch
+        {
+            RecoveryOutcome.PasswordChanged => TypedResults.NoContent(),
+            RecoveryOutcome.PasswordUnacceptable => TypedResults.BadRequest(new RegistrationError("password_too_short")),
+            _ => TypedResults.BadRequest(new RegistrationError("code_invalid")),
+        };
     }
 
     private static async Task<Results<Ok<SessionResponse>, UnauthorizedHttpResult, ProblemHttpResult>>

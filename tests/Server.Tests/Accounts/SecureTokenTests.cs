@@ -3,12 +3,12 @@ using Vtt.Server.Accounts;
 
 namespace Vtt.Server.Tests.Accounts;
 
-public class InviteTokenTests
+public class SecureTokenTests
 {
     [Fact]
     public void EveryTokenIsDifferent()
     {
-        var tokens = Enumerable.Range(0, 100).Select(_ => InviteToken.Generate()).ToList();
+        var tokens = Enumerable.Range(0, 100).Select(_ => SecureToken.Generate()).ToList();
 
         Assert.Equal(tokens.Count, tokens.Distinct(StringComparer.Ordinal).Count());
     }
@@ -16,9 +16,9 @@ public class InviteTokenTests
     [Fact]
     public void ATokenCarriesTheFullTwoHundredAndFiftySixBits()
     {
-        var token = InviteToken.Generate();
+        var token = SecureToken.Generate();
 
-        Assert.Equal(InviteToken.TokenBytes, Base64Url.DecodeFromChars(token).Length);
+        Assert.Equal(SecureToken.TokenBytes, Base64Url.DecodeFromChars(token).Length);
     }
 
     [Theory]
@@ -31,7 +31,7 @@ public class InviteTokenTests
         // means something else in a URL.
         for (var attempt = 0; attempt < 200; attempt++)
         {
-            Assert.DoesNotContain(forbidden, InviteToken.Generate());
+            Assert.DoesNotContain(forbidden, SecureToken.Generate());
         }
     }
 
@@ -40,29 +40,29 @@ public class InviteTokenTests
     {
         // Redemption finds the row by hashing the presented token and looking it up, so the same
         // token must always produce the same hash.
-        var token = InviteToken.Generate();
+        var token = SecureToken.Generate();
 
-        Assert.Equal(InviteToken.Hash(token), InviteToken.Hash(token));
+        Assert.Equal(SecureToken.Hash(token), SecureToken.Hash(token));
     }
 
     [Fact]
     public void DifferentTokensHashDifferently()
     {
-        Assert.NotEqual(InviteToken.Hash(InviteToken.Generate()), InviteToken.Hash(InviteToken.Generate()));
+        Assert.NotEqual(SecureToken.Hash(SecureToken.Generate()), SecureToken.Hash(SecureToken.Generate()));
     }
 
     [Fact]
     public void TheHashDoesNotContainTheToken()
     {
-        var token = InviteToken.Generate();
+        var token = SecureToken.Generate();
 
-        Assert.DoesNotContain(token, InviteToken.Hash(token), StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(token, SecureToken.Hash(token), StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void TheHashIsTheDeclaredLength()
     {
         // The column is sized to this, so a mismatch would be a truncation rather than an error.
-        Assert.Equal(InviteToken.HashLength, InviteToken.Hash(InviteToken.Generate()).Length);
+        Assert.Equal(SecureToken.HashLength, SecureToken.Hash(SecureToken.Generate()).Length);
     }
 }
