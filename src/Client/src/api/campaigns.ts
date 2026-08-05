@@ -20,6 +20,16 @@ export interface RosterEntry {
   state: MembershipState
 }
 
+export interface GameSystemSummary {
+  systemId: string
+  version: string
+}
+
+/** What a campaign may pin. The form offers these rather than asking people to guess. */
+export function listGameSystems(): Promise<ApiResult<GameSystemSummary[]>> {
+  return request<GameSystemSummary[]>('/api/systems')
+}
+
 export function listCampaigns(): Promise<ApiResult<CampaignSummary[]>> {
   return request<CampaignSummary[]>('/api/campaigns')
 }

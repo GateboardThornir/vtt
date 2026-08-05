@@ -20,6 +20,35 @@ internal sealed class GameSystemRegistry : IGameSystemRegistry
     public bool IsKnown(string systemId, string version) => Find(systemId, version) is not null;
 }
 
+/// <summary>A registered module, as a client needs to see it.</summary>
+public sealed record GameSystemSummary(string SystemId, string Version);
+
+public static class GameSystemEndpoints
+{
+    /// <summary>
+    /// Lists what a campaign may pin.
+    /// </summary>
+    /// <remarks>
+    /// Exists because the campaign form previously asked people to type a system identifier and a
+    /// version by hand, with no way to know what was valid. A pin that does not resolve produces a
+    /// campaign in which no character can ever be created — a failure that surfaces much later than
+    /// the mistake. Offering the registered modules removes the guess.
+    /// </remarks>
+    public static IEndpointRouteBuilder MapGameSystems(this IEndpointRouteBuilder endpoints)
+    {
+        endpoints
+            .MapGet(
+                "/api/systems",
+                (IGameSystemRegistry registry) => registry.All
+                    .Select(module => new GameSystemSummary(module.SystemId, module.Version))
+                    .OrderBy(module => module.SystemId)
+                    .ThenBy(module => module.Version))
+            .RequireAuthorization(Accounts.AccountPolicies.ActiveAccount);
+
+        return endpoints;
+    }
+}
+
 public static class GameSystemServices
 {
     public static IServiceCollection AddGameSystems(this IServiceCollection services) =>
