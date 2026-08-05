@@ -13,7 +13,8 @@ public static class AccountServices
         services
             .AddSingleton<IPasswordHasher, IdentityPasswordHasher>()
 
-            // Scoped, not singleton: it holds a DbContext, which is scoped per request and is not
+            // Scoped, not singleton: they hold a DbContext, which is scoped per request and is not
             // thread-safe.
-            .AddScoped<IInviteService, InviteService>();
+            .AddScoped<IInviteService, InviteService>()
+            .AddScoped<IRegistrationService, RegistrationService>();
 }
