@@ -1,6 +1,6 @@
 # 017 — Auth UI
 
-**Status:** not started
+**Status:** done
 **Depends on:** 016 (every endpoint these screens call)
 **Branch:** `task/017-auth-ui`
 
