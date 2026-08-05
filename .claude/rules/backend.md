@@ -54,3 +54,12 @@ exceptional conditions. Never leak internal exception detail to clients.
 Unit tests for rules resolution, permission checks, and visibility filtering — these three are
 where bugs are expensive. Integration tests against a real Postgres in Docker, not an in-memory
 provider (behaviour differs, especially for JSONB). Test names describe the behaviour asserted.
+
+Integration tests live in `tests/Server.Tests/Integration/`, carry `[Trait("Category",
+"Integration")]`, and join `[Collection(IntegrationDatabase.Name)]` so they share the one
+Testcontainers instance — a fixture per class means a container per class, which is how a suite
+becomes too slow to run. Everything else is a plain unit test that must not need Docker, so
+`dotnet test --filter "Category!=Integration"` stays fast.
+
+Reach the application through `PostgresFixture.CreateClient()` rather than instantiating types
+directly: the point of an integration test is proving the wiring, which is what breaks.

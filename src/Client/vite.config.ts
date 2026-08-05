@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
@@ -15,5 +16,16 @@ export default defineConfig({
       // server has no reason to care which of the two ports the request arrived on.
       '/api': 'http://localhost:5080',
     },
+  },
+  test: {
+    // jsdom simulates enough of a browser to render and query a component tree. It does not lay
+    // anything out or paint, so anything depending on real geometry or true event ordering — the
+    // Pixi canvas at task 052, most obviously — needs a different kind of test.
+    environment: 'jsdom',
+    setupFiles: ['./src/test-setup.ts'],
+
+    // No `globals: true`: tests import describe/it/expect explicitly, which keeps tsconfig free of
+    // a types entry and lets ESLint keep flagging genuinely undefined identifiers.
+    globals: false,
   },
 })

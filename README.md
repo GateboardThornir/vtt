@@ -130,6 +130,22 @@ Getting one wrong is cheap **before** it is merged and expensive after:
 revert first. Once a migration is on `main` it is append-only: correct it with a *new* migration,
 never by editing the old one, because anyone who has already applied it will never re-run it.
 
+### Tests
+
+```bash
+dotnet test                                      # backend, needs Docker
+dotnet test --filter "Category!=Integration"     # the fast subset, no Docker
+cd src/Client && npm run test                    # frontend
+```
+
+Backend integration tests start their **own throwaway PostgreSQL container** and destroy it
+afterwards. They never touch the database `docker compose` runs, so running them mid-session cannot
+harm your data — verified, not assumed. The cost is that `dotnet test` needs Docker running;
+the `Category` filter above is the escape hatch when it is not.
+
+Frontend tests run in jsdom with React Testing Library. Reasoning in
+[ADR 005](docs/decisions/005-integration-tests-against-a-real-database.md).
+
 ### On Windows: keep the project inside WSL2
 
 Clone to a Linux path such as `~/projects/vtt`. **Never** work under `/mnt/c/...`. WSL2 can reach
@@ -148,7 +164,9 @@ mystifying, the cause is invisible, and the fix is always "move the project".
 | `./scripts/ef.sh database update` | Applies outstanding migrations |
 | `./scripts/ef.sh migrations add X --output-dir Infrastructure/Migrations` | Generates a migration |
 | `dotnet build` | Builds the solution. Warnings are errors — a warning fails the build |
-| `dotnet test` | Runs the backend test suite |
+| `dotnet test` | Runs the backend test suite. Needs Docker — see below |
+| `dotnet test --filter "Category!=Integration"` | The fast subset, no Docker required |
+| `npm run test` | Frontend tests (Vitest), from `src/Client` |
 | `dotnet format` | Applies the `.editorconfig` conventions |
 | `npm run dev` | Frontend dev server on port 5173, from `src/Client` |
 | `npm run lint` / `npm run typecheck` | ESLint / `tsc`, from `src/Client` |

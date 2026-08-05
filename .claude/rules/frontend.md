@@ -43,6 +43,22 @@ Function components with hooks. No class components. Colocate a component with i
 tests. Keep components small enough to read in one screen; extract when a component grows past
 roughly 150 lines. Props typed explicitly, no `React.FC`.
 
+## Tests
+
+Vitest with jsdom and React Testing Library. Test files are colocated with the component
+(`App.tsx` / `App.test.tsx`), and `describe`/`it`/`expect` are imported explicitly — globals are
+off deliberately.
+
+Query the way a user perceives the page: by role, label and text, never by class name or component
+internals. Tests written that way survive markup refactors; tests coupled to structure do not.
+
+Stub the network at `fetch`, not at the wrapper that calls it. Stubbing the wrapper only proves a
+component called a function; stubbing `fetch` proves it handles what the server actually sends —
+including error statuses, which are answers rather than exceptions.
+
+jsdom does not lay out or paint. Anything depending on real geometry, true event ordering or a
+WebGL context — the Pixi canvas above all — cannot be meaningfully covered here.
+
 ## Performance on the table
 
 The canvas must stay responsive with hundreds of sprites. Batch scene-graph updates per animation
