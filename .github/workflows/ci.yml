@@ -1,0 +1,80 @@
+name: CI
+
+# Both triggers on purpose. The working pattern is task branch -> merge -> push, so `push` is what
+# actually fires today; `pull_request` is here so the workflow keeps working if that ever changes.
+# A same-repo pull request would run this twice, which is an acceptable price for not having to
+# remember this file exists on the day the first PR is opened.
+on:
+  push:
+  pull_request:
+
+# A second push to the same branch makes the first run irrelevant. Cancelling it keeps the Actions
+# allowance going to results somebody will read.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # The SDK version comes from global.json, never from a second copy here: CI and a developer
+      # machine disagreeing about the toolchain is a debugging trap that costs hours.
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # setup-dotnet's own cache needs a packages.lock.json, which this repo does not use.
+      - uses: actions/cache@v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', 'Directory.Build.props') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - run: dotnet restore
+
+      - run: dotnet build --no-restore
+
+      # The integration tests start a PostgreSQL container through Testcontainers. Hosted Ubuntu
+      # runners ship a working Docker daemon, so this needs no setup — that was the main risk
+      # ADR 005 accepted, and it costs only the image pull.
+      - run: dotnet test --no-build
+
+      # `if: always()` so a formatting nit and a failing test are both reported in one run instead
+      # of the first one hiding the second. Style is checked here and never in the build — ADR 001.
+      - run: dotnet format --verify-no-changes --no-restore
+        if: always()
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Client
+    steps:
+      - uses: actions/checkout@v7
+
+      # Node version from .nvmrc, for the same reason the SDK comes from global.json.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: src/Client/package-lock.json
+
+      # `npm ci` rather than `npm install`: it installs exactly the lockfile and fails if
+      # package.json and the lockfile disagree, which is what a build should do.
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm run typecheck
+        if: always()
+
+      - run: npm run test
+        if: always()
+
+      - run: npm run build
+        if: always()
