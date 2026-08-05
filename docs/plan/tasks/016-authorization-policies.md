@@ -1,6 +1,6 @@
 # 016 — Authorization policies
 
-**Status:** not started
+**Status:** done
 **Depends on:** 015
 **Branch:** `task/016-authorization-policies`
 

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+
 namespace Vtt.Server.Accounts;
 
 public static class AccountServices
@@ -25,10 +27,23 @@ public static class AccountServices
     /// Registers cookie authentication. Separate from <see cref="AddAccounts"/> because it needs to
     /// know whether this is a development host, and because it adds middleware rather than services.
     /// </summary>
-    public static IServiceCollection AddSessionCookie(this IServiceCollection services, bool isDevelopment) =>
+    public static IServiceCollection AddSessionCookie(this IServiceCollection services, bool isDevelopment)
+    {
         services
             .AddAuthentication(SessionCookie.Scheme)
-            .AddCookie(SessionCookie.Scheme, options => SessionCookie.Configure(options, isDevelopment))
-            .Services
-            .AddAuthorization();
+            .AddCookie(SessionCookie.Scheme, options => SessionCookie.Configure(options, isDevelopment));
+
+        services.AddScoped<IAuthorizationHandler, AccountRequirementHandler>();
+
+        services
+            .AddAuthorizationBuilder()
+            .AddPolicy(
+                AccountPolicies.ActiveAccount,
+                policy => policy.AddRequirements(new AccountRequirement(mustBeAdministrator: false)))
+            .AddPolicy(
+                AccountPolicies.Administrator,
+                policy => policy.AddRequirements(new AccountRequirement(mustBeAdministrator: true)));
+
+        return services;
+    }
 }

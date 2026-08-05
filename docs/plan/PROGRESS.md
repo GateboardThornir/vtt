@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 016 — Authorization policies
+**Next task:** 017 — Auth UI
 **Blocked on:** nothing
 
 ## Completed
@@ -30,6 +30,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 013 | Login / logout | 2026-08-05 | Cookie sessions carrying identity only. Wrong password and unknown username answer identically; state is checked only after the password verifies. First consumer of 010's rehash signal |
 | 014 | Admin approval queue | 2026-08-05 | Platform role column moved here from 016 — an approval queue anyone can call is not one. Approve, reject, disable and re-enable are one guarded transition. Roles read per request, never from the cookie |
 | 015 | Admin recovery codes | 2026-08-05 | Admin-mediated recovery with no email anywhere. `SecureToken` extracted now that 011 and 015 give two examples — the identical part only. Recovery restores the password and nothing else |
+| 016 | Authorization policies | 2026-08-05 | Declared policies replace 014's hand-rolled guard. Closes 013's gap: a disabled account's existing cookie now stops working on the next request rather than at expiry |
 
 ## Deviations from the plan
 
@@ -39,6 +40,7 @@ worse than no plan.
 | Task | What changed | Why |
 |---|---|---|
 | 004 | i18next infrastructure moved from 098 to 017; 098 keeps full IT + EN coverage and the switcher | `.claude/rules/frontend.md` requires a translation layer from the first line of UI code, and the spec wants the infrastructure from the first release — but the roadmap parked it in Phase 3. Leaving it at 098 would ship every Phase 1 and 2 screen with hardcoded strings and turn 098 into archaeology. 017 is the first screen a user actually reads, so it lands there. 004 itself ships no i18next: its page is a diagnostic that 017 deletes |
+| 016 | The campaign-role resolver moved from 016 to 021 | The roadmap paired it with the platform-role policy, but campaigns arrive at 020 and membership at 021, so a resolver written at 016 would have no table to read, no consumer and no test that exercises it. 016 ships the platform half; 021 builds the campaign half where it is first needed |
 | 014 | The platform-role column moved from 016 to 014 | 010 deferred it as speculative because nothing read it. 014's approval queue must enforce against it, and a task cannot own a column an earlier task already depends on. 016 keeps what it was for: the policy infrastructure and the campaign-role resolver |
 | 004 | `GET /health` became `GET /api/health` | One proxy prefix in development and one Caddy rule at 101. A root-level path would also be swallowed by the SPA's index.html fallback for unknown routes unless special-cased |
 
