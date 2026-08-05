@@ -1,6 +1,6 @@
 # 004 — Frontend scaffold
 
-**Status:** not started
+**Status:** done
 **Depends on:** 001 (003 supplies the payload the page renders)
 **Branch:** `task/004-frontend-scaffold`
 
