@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 032 — 5e module skeleton + sheet schema v1
+**Next task:** 033 — `RecomputeDerived` for 5e
 **Blocked on:** nothing
 
 ## Completed
@@ -40,6 +40,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 024 | Session entity | 2026-08-05 | Create, open, close. One open session per campaign enforced by a partial unique index — verified by trying to break it in raw SQL. Named `PlaySession` to stay distinct from the sign-in session |
 | 030 | `IGameSystem` interface + registry | 2026-08-05 | The seam between platform and game. Validates the pin 020 stored unchecked. `Resolve` deferred to 061 — its parameter types are built there |
 | 031 | JSON schema validation | 2026-08-05 | Shape only, never rules — the floor a Master override cannot go through. Compiled schemas cached; errors carry the path to the offending value |
+| 032 | 5e module skeleton + sheet schema v1 | 2026-08-05 | `dnd5e 1.0.0`. Raw and derived separated in the schema; `additionalProperties` false throughout so a typo fails. `MigrateSheet` refuses unknown versions rather than passing documents through |
 
 ## Deviations from the plan
 
@@ -49,6 +50,7 @@ worse than no plan.
 | Task | What changed | Why |
 |---|---|---|
 | 004 | i18next infrastructure moved from 098 to 017; 098 keeps full IT + EN coverage and the switcher | `.claude/rules/frontend.md` requires a translation layer from the first line of UI code, and the spec wants the infrastructure from the first release — but the roadmap parked it in Phase 3. Leaving it at 098 would ship every Phase 1 and 2 screen with hardcoded strings and turn 098 into archaeology. 017 is the first screen a user actually reads, so it lands there. 004 itself ships no i18next: its page is a diagnostic that 017 deletes |
+| 032 | The registered 5e version is `1.0.0`, not `1.0` | Dev campaigns created during 020–024 pinned `dnd5e 1.0`, which no longer resolves. Semantic versions are the contract and a database holding three test rows was the cheapest moment to get it right; those rows were deleted rather than migrated, which would have been theatre |
 | 030 | `IGameSystem.Resolve` deferred from 030 to 061 | The binding contract declares `Resolve(GameIntent, TableState)`, and neither type exists — they are built by 060 and 061. Defining them at 030 would mean inventing the intent envelope and the whole live table state six tasks before anything consumes either, and almost certainly getting both wrong. Everything else in the contract ships at 030 |
 | 016 | The campaign-role resolver moved from 016 to 021 | The roadmap paired it with the platform-role policy, but campaigns arrive at 020 and membership at 021, so a resolver written at 016 would have no table to read, no consumer and no test that exercises it. 016 ships the platform half; 021 builds the campaign half where it is first needed |
 | 014 | The platform-role column moved from 016 to 014 | 010 deferred it as speculative because nothing read it. 014's approval queue must enforce against it, and a task cannot own a column an earlier task already depends on. 016 keeps what it was for: the policy infrastructure and the campaign-role resolver |

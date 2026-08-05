@@ -179,7 +179,7 @@ public class NotificationTests(PostgresFixture fixture) : IAsyncLifetime
     {
         var response = await client.PostAsJsonAsync(
             "/api/campaigns",
-            new CreateCampaignRequest(name, "dnd5e", "1.0"));
+            new CreateCampaignRequest(name, "dnd5e", "1.0.0"));
 
         return (await response.Content.ReadFromJsonAsync<CampaignSummary>(_jsonOptions))!.Id;
     }

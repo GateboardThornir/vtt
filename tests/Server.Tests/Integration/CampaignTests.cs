@@ -47,12 +47,12 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
 
         var response = await client.PostAsJsonAsync(
             "/api/campaigns",
-            new CreateCampaignRequest("A campaign", "dnd5e", "1.0"));
+            new CreateCampaignRequest("A campaign", "dnd5e", "1.0.0"));
 
         var created = await response.Content.ReadFromJsonAsync<CampaignSummary>(_jsonOptions);
 
         Assert.Equal("dnd5e", created?.SystemId);
-        Assert.Equal("1.0", created?.SystemVersion);
+        Assert.Equal("1.0.0", created?.SystemVersion);
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
 
         var response = await client.PostAsJsonAsync(
             "/api/campaigns",
-            new CreateCampaignRequest("A campaign", "dnd5e", "99.0"));
+            new CreateCampaignRequest("A campaign", "dnd5e", "99.0.0"));
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -150,8 +150,8 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("", "dnd5e", "1.0", "name_invalid")]
-    [InlineData("   ", "dnd5e", "1.0", "name_invalid")]
+    [InlineData("", "dnd5e", "1.0.0", "name_invalid")]
+    [InlineData("   ", "dnd5e", "1.0.0", "name_invalid")]
     [InlineData("Fine", "", "1.0", "system_invalid")]
     [InlineData("Fine", "dnd5e", "", "system_invalid")]
     public async Task MalformedInputIsRefusedAtTheBoundary(
@@ -184,7 +184,7 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
     }
 
     private static Task<HttpResponseMessage> CreateCampaignAsync(HttpClient client, string name) =>
-        client.PostAsJsonAsync("/api/campaigns", new CreateCampaignRequest(name, "dnd5e", "1.0"));
+        client.PostAsJsonAsync("/api/campaigns", new CreateCampaignRequest(name, "dnd5e", "1.0.0"));
 
     private async Task<HttpClient> SignedInAsync(string username)
     {
