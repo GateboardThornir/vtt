@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Time.Testing;
+using Vtt.Server.Systems;
 
 namespace Vtt.Server.Tests.Integration;
 
@@ -21,5 +22,13 @@ namespace Vtt.Server.Tests.Integration;
 internal sealed class TestApplicationFactory(FakeTimeProvider clock) : WebApplicationFactory<Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder) =>
-        builder.ConfigureServices(services => services.AddSingleton<TimeProvider>(clock));
+        builder.ConfigureServices(services =>
+        {
+            services.AddSingleton<TimeProvider>(clock);
+
+            // A pin that resolves. The real 5e module lands at 032; registering one here lets the
+            // registry and the campaign pin check be exercised without any game's rules reaching
+            // into a test fixture.
+            services.AddSingleton<IGameSystem, TestGameSystem>();
+        });
 }

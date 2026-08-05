@@ -1,0 +1,27 @@
+namespace Vtt.Server.Systems;
+
+internal sealed class GameSystemRegistry : IGameSystemRegistry
+{
+    private readonly Dictionary<(string SystemId, string Version), IGameSystem> _modules;
+
+    public GameSystemRegistry(IEnumerable<IGameSystem> modules)
+    {
+        _modules = modules.ToDictionary(module => (module.SystemId, module.Version));
+        All = [.. _modules.Values];
+    }
+
+    public IReadOnlyList<IGameSystem> All { get; }
+
+    public IGameSystem? Find(string systemId, string version) =>
+        _modules.GetValueOrDefault((systemId, version));
+
+    public bool IsKnown(string systemId, string version) => Find(systemId, version) is not null;
+}
+
+public static class GameSystemServices
+{
+    public static IServiceCollection AddGameSystems(this IServiceCollection services) =>
+        // Singleton: modules are stateless descriptions of a game's rules, and there is exactly one
+        // set of them for the life of the process.
+        services.AddSingleton<IGameSystemRegistry, GameSystemRegistry>();
+}

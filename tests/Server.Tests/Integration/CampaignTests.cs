@@ -47,17 +47,20 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
 
         var response = await client.PostAsJsonAsync(
             "/api/campaigns",
-            new CreateCampaignRequest("A campaign", "dnd5e", "1.4.2"));
+            new CreateCampaignRequest("A campaign", "dnd5e", "1.0"));
 
         var created = await response.Content.ReadFromJsonAsync<CampaignSummary>(_jsonOptions);
 
         Assert.Equal("dnd5e", created?.SystemId);
-        Assert.Equal("1.4.2", created?.SystemVersion);
+        Assert.Equal("1.0", created?.SystemVersion);
     }
 
     [Fact]
-    public async Task AnUnknownSystemIsStillAcceptedBecauseNothingCanCheckItYet()
+    public async Task AnUnregisteredSystemIsRefused()
     {
+        // Task 020 accepted anything, deliberately: a hardcoded list would have been a second
+        // source of truth that 030's registry then had to remove. The registry is that source of
+        // truth, so the check now exists and this is the test that used to assert the opposite.
         await CreateAccountAsync("Mattia");
         using var client = await SignedInAsync("Mattia");
 
@@ -65,9 +68,22 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
             "/api/campaigns",
             new CreateCampaignRequest("A campaign", "some-future-system", "0.1"));
 
-        // A hardcoded list here would be a second source of truth that task 030 would have to
-        // remove. 030 owns the check.
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("system_unknown", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AKnownSystemAtAnUnknownVersionIsRefused()
+    {
+        // The pin is both halves. A module existing does not make every version of it exist.
+        await CreateAccountAsync("Mattia");
+        using var client = await SignedInAsync("Mattia");
+
+        var response = await client.PostAsJsonAsync(
+            "/api/campaigns",
+            new CreateCampaignRequest("A campaign", "dnd5e", "99.0"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
