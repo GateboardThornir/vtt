@@ -28,11 +28,22 @@ StartupLog.DatabaseConfigured(app.Logger, redactedConnectionString);
 // 200 here now means "this instance can serve a request that touches the database", which is what
 // a proxy or a container probe actually wants to know. The trade is that a 503 no longer
 // distinguishes a dead process from an unreachable database, so the body names the failing check.
+// Serving is not the only thing this binary does. The branch is deliberately narrow — `dotnet ef`
+// and the integration tests both execute this file, and neither passes arguments.
+if (CreateAccountCommand.Matches(args))
+{
+    return await CreateAccountCommand.RunAsync(app.Services, args, Console.Out, ConsoleSecret.Read);
+}
+
+app.MapAccounts();
+
 // Under /api so the Vite dev proxy needs one prefix (task 004) and Caddy one rule (task 101): a
 // root-level path would be swallowed by the SPA's index.html fallback unless special-cased.
 app.MapHealthChecks("/api/health", new HealthCheckOptions { ResponseWriter = HealthCheckResponse.Write });
 
 app.Run();
+
+return 0;
 
 // Top-level statements compile to an internal entry-point class, which WebApplicationFactory<T>
 // cannot name. This declaration exists solely so the integration tests can boot the real

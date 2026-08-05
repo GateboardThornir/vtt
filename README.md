@@ -105,6 +105,20 @@ applies credentials only while initialising an empty data directory; afterwards 
 stays in force and authentication fails as if you had mistyped it. The only fix is
 `docker compose down -v`, which discards the local database.
 
+### Creating the first account
+
+A fresh database has no accounts, and registration requires an invite that an account must issue —
+so the first one is created by hand:
+
+```bash
+./scripts/create-account.sh mattia
+```
+
+The password is prompted for, never passed as an argument: arguments are visible in the process list
+and persist in shell history. The account is created `Active`, which is the only account that never
+goes through an invite. Reasoning in
+[ADR 008](docs/decisions/008-bootstrapping-the-first-account.md).
+
 ### Database migrations
 
 The schema is versioned as EF Core migrations under `src/Server/Infrastructure/Migrations/`. They
@@ -176,6 +190,7 @@ mystifying, the cause is invisible, and the fix is always "move the project".
 | `docker compose down -v` | Stops it and deletes the data volume |
 | `./scripts/dev-server.sh` | Starts the server on port 5080, with `.env` loaded |
 | `./scripts/ef.sh database update` | Applies outstanding migrations |
+| `./scripts/create-account.sh <name>` | Creates an account directly, for the first one only |
 | `./scripts/ef.sh migrations add X --output-dir Infrastructure/Migrations` | Generates a migration |
 | `dotnet build` | Builds the solution. Warnings are errors — a warning fails the build |
 | `dotnet test` | Runs the backend test suite. Needs Docker — see below |

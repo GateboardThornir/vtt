@@ -356,6 +356,24 @@ a canvas. `npm run test:watch` reruns on save.
 
 Why a real database rather than a fast fake is [ADR 005](decisions/005-integration-tests-against-a-real-database.md).
 
+### Creating the first account
+
+Registration needs an invite, and an invite has to be issued by an account — so a brand new database
+cannot be registered against at all. One command breaks that circle:
+
+```bash
+./scripts/create-account.sh mattia
+```
+
+It prompts for the password twice and echoes nothing. **Do not look for a way to pass the password
+as an argument**: arguments show up in the process list for every user on the machine, and they stay
+in your shell history long after you have forgotten typing them.
+
+The account it creates is `Active` — the only account that never goes through an invite and never
+waits for approval, because at that moment there is nobody to approve it. Everyone after it
+registers normally. The full reasoning, including what was rejected, is in
+[ADR 008](decisions/008-bootstrapping-the-first-account.md).
+
 ### Working with migrations
 
 The database schema is not written by hand. You change the C# model, and EF Core generates a

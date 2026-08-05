@@ -64,6 +64,23 @@ public class User
         };
 
     /// <summary>
+    /// Creates an already-active account, bypassing both the invite and the approval.
+    /// </summary>
+    /// <remarks>
+    /// The bootstrap path only, used by <c>create-account</c> to break the circle where
+    /// registration needs an invite and an invite needs an account (ADR 008). A separate factory
+    /// rather than an <c>Activate()</c> mutator, because approving a pending account is task 014's
+    /// to design and this task should not hand it an API by accident.
+    /// </remarks>
+    public static User CreateActive(string username, string passwordHash, DateTimeOffset createdAt)
+    {
+        var user = Register(username, passwordHash, createdAt);
+        user.State = AccountState.Active;
+
+        return user;
+    }
+
+    /// <summary>
     /// Reduces a username to the form the unique index compares.
     /// </summary>
     /// <remarks>
