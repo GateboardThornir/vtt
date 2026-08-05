@@ -44,12 +44,12 @@ dotnet build
 The server listens on <http://localhost:5080>. Confirm it is alive:
 
 ```bash
-curl http://localhost:5080/health
+curl http://localhost:5080/api/health
 # -> {"status":"Healthy","checks":{"database":"Healthy"}}
 ```
 
 A 200 means the server can also reach the database. If the database is unreachable the server still
-starts and serves, and `/health` returns 503 naming the check that failed.
+starts and serves, and `/api/health` returns 503 naming the check that failed.
 
 HTTP only in development — no local HTTPS certificate to install. TLS is terminated by Caddy in
 production.

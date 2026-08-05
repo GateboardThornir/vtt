@@ -9,7 +9,7 @@ var connectionString = DatabaseConnectionString.Resolve(builder.Configuration);
 
 builder.Services.AddVttDatabase(connectionString);
 
-// CanConnectAsync against the registered context, run per request to /health — no background
+// CanConnectAsync against the registered context, run per request to /api/health — no background
 // timer and no connection held open between probes.
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<VttDbContext>("database");
@@ -22,6 +22,8 @@ StartupLog.DatabaseConfigured(app.Logger, redactedConnectionString);
 // 200 here now means "this instance can serve a request that touches the database", which is what
 // a proxy or a container probe actually wants to know. The trade is that a 503 no longer
 // distinguishes a dead process from an unreachable database, so the body names the failing check.
-app.MapHealthChecks("/health", new HealthCheckOptions { ResponseWriter = HealthCheckResponse.Write });
+// Under /api so the Vite dev proxy needs one prefix (task 004) and Caddy one rule (task 101): a
+// root-level path would be swallowed by the SPA's index.html fallback unless special-cased.
+app.MapHealthChecks("/api/health", new HealthCheckOptions { ResponseWriter = HealthCheckResponse.Write });
 
 app.Run();

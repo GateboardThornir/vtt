@@ -290,12 +290,12 @@ script is what turns it into the connection string the server expects.
 ```bash
 ./scripts/ef.sh database update       # create/update the schema — see below
 ./scripts/dev-server.sh
-curl http://localhost:5080/health
+curl http://localhost:5080/api/health
 # -> {"status":"Healthy","checks":{"database":"Healthy"}}
 ```
 
-A 200 from `/health` means the process is up **and** it can reach the database. Stop the container
-and the server keeps running, but `/health` turns into a 503 naming the check that failed. That is
+A 200 from `/api/health` means the process is up **and** it can reach the database. Stop the container
+and the server keeps running, but `/api/health` turns into a 503 naming the check that failed. That is
 the intended behaviour: an unreachable database is a condition to report, not a reason to crash.
 
 If the container never reaches "healthy", `docker compose logs postgres` says why. The usual causes
