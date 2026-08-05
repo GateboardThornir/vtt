@@ -7,6 +7,7 @@ using Vtt.Server.Infrastructure;
 using Vtt.Server.Notifications;
 using Vtt.Server.Sessions;
 using Vtt.Server.Systems;
+using Vtt.Server.Table;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,8 @@ builder.Services.AddNotifications();
 builder.Services.AddPlaySessions();
 builder.Services.AddGameSystems();
 builder.Services.AddCharacters();
+builder.Services.AddTable();
+builder.Services.AddSignalR();
 builder.Services.AddSessionCookie(builder.Environment.IsDevelopment());
 
 // Enums travel as their names, not their ordinals. A payload saying "state": 1 forces every client
@@ -63,6 +66,10 @@ app.MapNotifications();
 app.MapPlaySessions();
 app.MapCharacters();
 app.MapGameSystems();
+
+// The hub authenticates with the same session cookie the API uses, so the browser sends it on the
+// WebSocket handshake and nothing new is issued.
+app.MapHub<TableHub>("/hubs/table");
 
 // Under /api so the Vite dev proxy needs one prefix (task 004) and Caddy one rule (task 101): a
 // root-level path would be swallowed by the SPA's index.html fallback unless special-cased.
