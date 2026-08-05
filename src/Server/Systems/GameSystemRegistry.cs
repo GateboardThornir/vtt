@@ -23,5 +23,9 @@ public static class GameSystemServices
     public static IServiceCollection AddGameSystems(this IServiceCollection services) =>
         // Singleton: modules are stateless descriptions of a game's rules, and there is exactly one
         // set of them for the life of the process.
-        services.AddSingleton<IGameSystemRegistry, GameSystemRegistry>();
+        services
+            .AddSingleton<IGameSystemRegistry, GameSystemRegistry>()
+
+            // Singleton so the compiled-schema cache is shared rather than rebuilt per request.
+            .AddSingleton<IDocumentValidator, DocumentValidator>();
 }

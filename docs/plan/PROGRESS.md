@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 031 — JSON schema validation infrastructure
+**Next task:** 032 — 5e module skeleton + sheet schema v1
 **Blocked on:** nothing
 
 ## Completed
@@ -39,6 +39,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 023 | Campaign list and detail UI | 2026-08-05 | Campaign list, detail with roster, invitations, notification bell. The API client split out of `accounts.ts` so each module owns its own calls |
 | 024 | Session entity | 2026-08-05 | Create, open, close. One open session per campaign enforced by a partial unique index — verified by trying to break it in raw SQL. Named `PlaySession` to stay distinct from the sign-in session |
 | 030 | `IGameSystem` interface + registry | 2026-08-05 | The seam between platform and game. Validates the pin 020 stored unchecked. `Resolve` deferred to 061 — its parameter types are built there |
+| 031 | JSON schema validation | 2026-08-05 | Shape only, never rules — the floor a Master override cannot go through. Compiled schemas cached; errors carry the path to the offending value |
 
 ## Deviations from the plan
 
