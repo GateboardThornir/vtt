@@ -33,6 +33,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 016 | Authorization policies | 2026-08-05 | Declared policies replace 014's hand-rolled guard. Closes 013's gap: a disabled account's existing cookie now stops working on the next request rather than at expiry |
 | 017 | Auth UI | 2026-08-05 | Sign in, register from an invite link, awaiting-approval, admin queue. i18next infrastructure lands here (IT + EN) per 004's deviation. Enums now cross the wire as names — they were serialising as numbers, which the frontend would have rendered as raw keys |
 | 017a | Issue invites over HTTP | 2026-08-05 | Gap found while writing test instructions: `IInviteService` could mint invites from 011 and nothing could reach it, so closing the loop needed SQL by hand. 017's card listed the screen and did not build it |
+| 020 | Campaign entity | 2026-08-05 | Creator becomes Master; `(SystemId, SystemVersion)` pinned from the first campaign, stored but not validated until 030. A campaign you cannot see is a 404, never a 403 |
 
 ## Deviations from the plan
 

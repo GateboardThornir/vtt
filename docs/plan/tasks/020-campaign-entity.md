@@ -1,6 +1,6 @@
 # 020 — Campaign entity
 
-**Status:** not started
+**Status:** done
 **Depends on:** 017 (a signed-in member to create one)
 **Branch:** `task/020-campaign-entity`
 
