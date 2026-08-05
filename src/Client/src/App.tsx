@@ -1,67 +1,87 @@
-import { useEffect, useState, type JSX } from 'react'
-import { fetchHealth, type HealthResult } from './api/health'
+import { type JSX } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Link, Navigate, Route, Routes } from 'react-router'
+import { AdminAccountsPage } from './accounts/AdminAccountsPage'
+import { RegisterPage } from './accounts/RegisterPage'
+import { SessionProvider } from './accounts/SessionProvider'
+import { useSession } from './accounts/sessionContext'
+import { SignInPage } from './accounts/SignInPage'
+import { languages } from './i18n'
 
 export default function App(): JSX.Element {
-  const [result, setResult] = useState<HealthResult | null>(null)
+  return (
+    <SessionProvider>
+      <Shell />
+    </SessionProvider>
+  )
+}
 
-  useEffect(() => {
-    // StrictMode runs this effect twice in development to surface missing cleanup. Aborting on
-    // teardown is what makes that harmless: the first request is cancelled instead of racing the
-    // second one to setState. Tasks 040 and 052 need the same discipline for a SignalR connection
-    // and a Pixi canvas, where a leaked second instance is far more visible.
-    const controller = new AbortController()
-
-    void fetchHealth(controller.signal).then((next) => {
-      if (!controller.signal.aborted) {
-        setResult(next)
-      }
-    })
-
-    return () => {
-      controller.abort()
-    }
-  }, [])
+function Shell(): JSX.Element {
+  const { t } = useTranslation()
+  const { session, loading, signOut } = useSession()
 
   return (
     <main>
-      <h1>VTT</h1>
-      <p className="subtitle">
-        Frontend scaffold. This page exists to prove the dev proxy reaches the server — it is
-        replaced by real screens at task 017.
-      </p>
-      <Status result={result} />
+      <header>
+        <strong>{t('common.appName')}</strong>
+        <LanguageSwitcher />
+        {session !== null && (
+          <button type="button" onClick={() => void signOut()}>
+            {t('common.signOut')}
+          </button>
+        )}
+      </header>
+
+      <Routes>
+        {/* Registration is reachable signed out, and is the only route that is. */}
+        <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="*"
+          element={
+            loading ? <p>{t('common.loading')}</p> : session === null ? <SignInPage /> : <SignedIn />
+          }
+        />
+      </Routes>
     </main>
   )
 }
 
-function Status({ result }: { result: HealthResult | null }): JSX.Element {
-  if (result === null) {
-    return <p>Contacting the server…</p>
-  }
-
-  if (result.kind === 'unreachable') {
-    return (
-      <section className="status bad">
-        <h2>Server unreachable</h2>
-        <p>
-          <code>GET /api/health</code> did not complete: {result.reason}
-        </p>
-        <p>Is <code>scripts/dev-server.sh</code> running?</p>
-      </section>
-    )
-  }
+function SignedIn(): JSX.Element {
+  const { t } = useTranslation()
+  const { session } = useSession()
 
   return (
-    <section className={result.ok ? 'status good' : 'status bad'}>
-      <h2>Server responded: {result.report.status}</h2>
-      <dl>
-        {Object.entries(result.report.checks).map(([name, status]) => (
-          <div key={name}>
-            <dt>{name}</dt>
-            <dd>{status}</dd>
-          </div>
+    <Routes>
+      <Route path="/admin/accounts" element={<AdminAccountsPage />} />
+      <Route
+        path="/"
+        element={
+          <section>
+            <p>{t('home.signedInAs', { username: session?.username ?? '' })}</p>
+            {/* Offered to everyone: the server refuses members regardless, and the client has
+                no business deciding permissions. Hiding it would be a guess about the answer. */}
+            <Link to="/admin/accounts">{t('home.adminLink')}</Link>
+          </section>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+function LanguageSwitcher(): JSX.Element {
+  const { t, i18n } = useTranslation()
+
+  return (
+    <label>
+      {t('common.language')}
+      <select value={i18n.language} onChange={(event) => void i18n.changeLanguage(event.target.value)}>
+        {languages.map((language) => (
+          <option key={language} value={language}>
+            {language.toUpperCase()}
+          </option>
         ))}
-      </dl>
-    </section>
+      </select>
+    </label>
   )
 }

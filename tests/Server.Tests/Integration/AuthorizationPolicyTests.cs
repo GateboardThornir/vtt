@@ -88,6 +88,21 @@ public class AuthorizationPolicyTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, (await GetAdminAsync(client)).StatusCode);
     }
 
+    [Fact]
+    public async Task EnumsCrossTheWireAsNamesRatherThanNumbers()
+    {
+        // A payload saying "state": 1 forces every client to keep its own copy of the numbering,
+        // and breaks silently the day a value is inserted in the middle. The frontend translates
+        // these names directly into message keys, so a number would render as a raw key on screen.
+        await CreateAsync("Admin", PlatformRole.Admin);
+        using var client = await SignedInAsync("Admin");
+
+        var body = await (await GetAdminAsync(client)).Content.ReadAsStringAsync();
+
+        Assert.Contains("\"state\":\"Active\"", body, StringComparison.Ordinal);
+        Assert.Contains("\"role\":\"Admin\"", body, StringComparison.Ordinal);
+    }
+
     private static Task<HttpResponseMessage> GetAdminAsync(HttpClient client) =>
         client.GetAsync(new Uri("/api/admin/accounts", UriKind.Relative));
 

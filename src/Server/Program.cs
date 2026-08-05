@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Vtt.Server.Accounts;
 using Vtt.Server.Infrastructure;
@@ -15,6 +16,12 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddVttDatabase(connectionString);
 builder.Services.AddAccounts();
 builder.Services.AddSessionCookie(builder.Environment.IsDevelopment());
+
+// Enums travel as their names, not their ordinals. A payload saying "state": 1 forces every client
+// to keep its own copy of the numbering and breaks silently the day a value is inserted in the
+// middle; "state": "Active" says what it means and survives reordering.
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // CanConnectAsync against the registered context, run per request to /api/health — no background
 // timer and no connection held open between probes.

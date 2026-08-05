@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Vtt.Server.Accounts;
@@ -13,6 +15,14 @@ public class AccountAdministrationTests(PostgresFixture fixture) : IAsyncLifetim
 {
     private const string Password = "a perfectly ordinary passphrase";
 
+    /// <remarks>
+    /// Mirrors the server's configuration: enums cross the wire as names, so a client reading them
+    /// needs the same converter. A test using the defaults would be reading a different contract
+    /// from the one that ships.
+    /// </remarks>
+    private static readonly JsonSerializerOptions JsonOptions =
+        new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
+
     public Task InitializeAsync() => fixture.ResetAsync();
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -24,7 +34,9 @@ public class AccountAdministrationTests(PostgresFixture fixture) : IAsyncLifetim
         await CreatePendingAsync("Newcomer");
 
         using var client = await SignedInAsync("Admin");
-        var pending = await client.GetFromJsonAsync<List<AccountSummary>>("/api/admin/accounts/pending");
+        var pending = await client.GetFromJsonAsync<List<AccountSummary>>(
+            "/api/admin/accounts/pending",
+            JsonOptions);
 
         Assert.Equal("Newcomer", Assert.Single(pending!).Username);
     }
