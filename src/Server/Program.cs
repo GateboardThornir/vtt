@@ -2,8 +2,8 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Vtt.Server.Accounts;
 using Vtt.Server.Campaigns;
-using Vtt.Server.Notifications;
 using Vtt.Server.Infrastructure;
+using Vtt.Server.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
 
