@@ -1,6 +1,6 @@
 # 013 — Login / logout
 
-**Status:** not started
+**Status:** done
 **Depends on:** 012 (accounts that exist and can be signed into)
 **Branch:** `task/013-login-logout`
 

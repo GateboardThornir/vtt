@@ -16,5 +16,17 @@ public static class AccountServices
             // Scoped, not singleton: they hold a DbContext, which is scoped per request and is not
             // thread-safe.
             .AddScoped<IInviteService, InviteService>()
-            .AddScoped<IRegistrationService, RegistrationService>();
+            .AddScoped<IRegistrationService, RegistrationService>()
+            .AddScoped<ISignInService, SignInService>();
+
+    /// <summary>
+    /// Registers cookie authentication. Separate from <see cref="AddAccounts"/> because it needs to
+    /// know whether this is a development host, and because it adds middleware rather than services.
+    /// </summary>
+    public static IServiceCollection AddSessionCookie(this IServiceCollection services, bool isDevelopment) =>
+        services
+            .AddAuthentication(SessionCookie.Scheme)
+            .AddCookie(SessionCookie.Scheme, options => SessionCookie.Configure(options, isDevelopment))
+            .Services
+            .AddAuthorization();
 }

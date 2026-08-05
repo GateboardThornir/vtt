@@ -64,6 +64,15 @@ public class User
         };
 
     /// <summary>
+    /// Replaces the stored hash with one produced by the current work factor.
+    /// </summary>
+    /// <remarks>
+    /// Called during sign-in when the framework reports the stored hash is out of date. It takes a
+    /// hash, never a password: this type has no business knowing how hashing works.
+    /// </remarks>
+    public void ReplacePasswordHash(string passwordHash) => PasswordHash = passwordHash;
+
+    /// <summary>
     /// Creates an already-active account, bypassing both the invite and the approval.
     /// </summary>
     /// <remarks>
