@@ -1,6 +1,6 @@
 # 024 — Session entity
 
-**Status:** not started
+**Status:** done
 **Depends on:** 021 (a roster to play with)
 **Branch:** `task/024-session-entity`
 

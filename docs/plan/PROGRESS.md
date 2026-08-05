@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 024 — Session entity
+**Next task:** 030 — `IGameSystem` interface + registry
 **Blocked on:** nothing
 
 ## Completed
@@ -37,6 +37,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 021 | Campaign roster | 2026-08-05 | Master moves from a column into the roster; the campaign-role resolver lands here per 016's deviation. The generated migration dropped `master_user_id` before the roster existed — reordered by hand and a backfill added |
 | 022 | In-app notifications | 2026-08-05 | The only channel the platform has, since it collects no email. Payload is a kind plus one parameter, never a sentence, so it can be translated. Marking read is scoped by recipient inside the UPDATE |
 | 023 | Campaign list and detail UI | 2026-08-05 | Campaign list, detail with roster, invitations, notification bell. The API client split out of `accounts.ts` so each module owns its own calls |
+| 024 | Session entity | 2026-08-05 | Create, open, close. One open session per campaign enforced by a partial unique index — verified by trying to break it in raw SQL. Named `PlaySession` to stay distinct from the sign-in session |
 
 ## Deviations from the plan
 
