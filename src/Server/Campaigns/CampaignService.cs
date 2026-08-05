@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Vtt.Server.Infrastructure;
 
@@ -12,51 +13,58 @@ internal sealed class CampaignService(VttDbContext context, TimeProvider clock) 
         string systemVersion,
         CancellationToken cancellationToken = default)
     {
-        var campaign = Campaign.Create(name.Trim(), masterUserId, systemId, systemVersion, clock.GetUtcNow());
+        var now = clock.GetUtcNow();
+        var campaign = Campaign.Create(name.Trim(), systemId, systemVersion, now);
 
+        // The campaign and its Master's roster row are created together. A campaign with no Master
+        // is not a state the system should be able to observe, even briefly.
         context.Set<Campaign>().Add(campaign);
+        context.Set<CampaignMember>().Add(CampaignMember.ForMaster(campaign.Id, masterUserId, now));
+
         await context.SaveChangesAsync(cancellationToken);
 
-        return Summarise(campaign);
+        return new CampaignSummary(
+            campaign.Id,
+            campaign.Name,
+            campaign.SystemId,
+            campaign.SystemVersion,
+            campaign.CreatedAt,
+            CampaignRole.Master);
     }
 
     public async Task<IReadOnlyList<CampaignSummary>> VisibleToAsync(
         Guid userId,
         CancellationToken cancellationToken = default) =>
-        await Visible(userId)
-            .OrderBy(campaign => campaign.CreatedAt)
-            .Select(campaign => new CampaignSummary(
-                campaign.Id,
-                campaign.Name,
-                campaign.SystemId,
-                campaign.SystemVersion,
-                campaign.CreatedAt))
-            .ToListAsync(cancellationToken);
+        await Visible(userId, campaign => true).ToListAsync(cancellationToken);
 
     public async Task<CampaignSummary?> VisibleToAsync(
         Guid campaignId,
         Guid userId,
         CancellationToken cancellationToken = default) =>
-        await Visible(userId)
-            .Where(campaign => campaign.Id == campaignId)
-            .Select(campaign => new CampaignSummary(
-                campaign.Id,
-                campaign.Name,
-                campaign.SystemId,
-                campaign.SystemVersion,
-                campaign.CreatedAt))
+        await Visible(userId, campaign => campaign.Id == campaignId)
             .SingleOrDefaultAsync(cancellationToken);
 
     /// <remarks>
-    /// The single place that decides what a given account can see. Every read goes through it, so
-    /// task 021 widens visibility to the roster by changing this one predicate rather than by
-    /// remembering to update each query.
+    /// The single place that decides what an account can see, widened from "you master it" to "you
+    /// are actually on the roster". <see cref="MembershipState.Active"/> and nothing else: an
+    /// invitation that has not been accepted confers no access, and treating any row in the
+    /// membership table as membership is the easiest mistake available here.
     /// </remarks>
-    private IQueryable<Campaign> Visible(Guid userId) =>
-        context.Set<Campaign>()
-            .AsNoTracking()
-            .Where(campaign => campaign.MasterUserId == userId);
-
-    private static CampaignSummary Summarise(Campaign campaign) =>
-        new(campaign.Id, campaign.Name, campaign.SystemId, campaign.SystemVersion, campaign.CreatedAt);
+    private IQueryable<CampaignSummary> Visible(
+        Guid userId,
+        Expression<Func<Campaign, bool>> filter) =>
+        from campaign in context.Set<Campaign>().AsNoTracking().Where(filter)
+        join member in context.Set<CampaignMember>().AsNoTracking()
+            on campaign.Id equals member.CampaignId
+        where member.UserId == userId && member.State == MembershipState.Active
+        // Ordered here, before the projection. Ordering an already-projected record does not
+        // translate to SQL and fails at runtime — see .claude/rules/backend.md.
+        orderby campaign.CreatedAt
+        select new CampaignSummary(
+            campaign.Id,
+            campaign.Name,
+            campaign.SystemId,
+            campaign.SystemVersion,
+            campaign.CreatedAt,
+            member.Role);
 }

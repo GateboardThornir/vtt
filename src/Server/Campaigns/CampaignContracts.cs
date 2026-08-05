@@ -3,13 +3,21 @@ namespace Vtt.Server.Campaigns;
 /// <summary>What a caller sends to create a campaign.</summary>
 public sealed record CreateCampaignRequest(string? Name, string? SystemId, string? SystemVersion);
 
-/// <summary>A campaign as its Master sees it.</summary>
+/// <summary>A campaign as one of its members sees it, including what they are to it.</summary>
 public sealed record CampaignSummary(
     Guid Id,
     string Name,
     string SystemId,
     string SystemVersion,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    CampaignRole Role);
+
+/// <summary>Somebody on a campaign's roster.</summary>
+public sealed record RosterEntry(Guid UserId, string Username, CampaignRole Role, MembershipState State);
+
+public sealed record InviteMemberRequest(string? Username);
+
+public sealed record RespondToInvitationRequest(bool Accept);
 
 public static class CampaignRules
 {

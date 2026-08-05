@@ -1,6 +1,6 @@
 # 021 — Campaign roster
 
-**Status:** not started
+**Status:** done
 **Depends on:** 020 (a campaign to have a roster)
 **Branch:** `task/021-campaign-roster`
 

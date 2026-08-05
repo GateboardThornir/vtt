@@ -39,6 +39,11 @@ Write-behind: never block the intent loop on a database write.
 ## EF Core
 
 `DbContext` per request, scoped. No lazy loading — load explicitly with `Include` or projections.
+
+**Filter and order on the entity; project last.** `OrderBy` over an already-projected record does not
+translate — the object being ordered by does not exist in the database — and the failure is a
+runtime 500, not a compile error. Projecting rather than loading entities is also how a password
+hash never reaches memory in the first place.
 JSONB columns are mapped as `JsonDocument`/POCO with `.HasColumnType("jsonb")`; never query
 JSONB with string concatenation. Migrations are generated, reviewed, and committed with the
 change that needs them.

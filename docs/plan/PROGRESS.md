@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 021 — Campaign roster
+**Next task:** 022 — In-app notifications
 **Blocked on:** nothing
 
 ## Completed
@@ -34,6 +34,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 017 | Auth UI | 2026-08-05 | Sign in, register from an invite link, awaiting-approval, admin queue. i18next infrastructure lands here (IT + EN) per 004's deviation. Enums now cross the wire as names — they were serialising as numbers, which the frontend would have rendered as raw keys |
 | 017a | Issue invites over HTTP | 2026-08-05 | Gap found while writing test instructions: `IInviteService` could mint invites from 011 and nothing could reach it, so closing the loop needed SQL by hand. 017's card listed the screen and did not build it |
 | 020 | Campaign entity | 2026-08-05 | Creator becomes Master; `(SystemId, SystemVersion)` pinned from the first campaign, stored but not validated until 030. A campaign you cannot see is a 404, never a 403 |
+| 021 | Campaign roster | 2026-08-05 | Master moves from a column into the roster; the campaign-role resolver lands here per 016's deviation. The generated migration dropped `master_user_id` before the roster existed — reordered by hand and a backfill added |
 
 ## Deviations from the plan
 

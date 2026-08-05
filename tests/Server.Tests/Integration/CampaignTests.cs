@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Vtt.Server.Accounts;
 using Vtt.Server.Campaigns;
@@ -12,6 +14,10 @@ namespace Vtt.Server.Tests.Integration;
 public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
 {
     private const string Password = "a perfectly ordinary passphrase";
+
+    /// <remarks>Mirrors the server: enums cross the wire as names, so a reader needs the converter.</remarks>
+    private static readonly JsonSerializerOptions _jsonOptions =
+        new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
     public Task InitializeAsync() => fixture.ResetAsync();
 
@@ -27,7 +33,7 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        var listed = await client.GetFromJsonAsync<List<CampaignSummary>>("/api/campaigns");
+        var listed = await client.GetFromJsonAsync<List<CampaignSummary>>("/api/campaigns", _jsonOptions);
         Assert.Equal("Rime of the Frostmaiden", Assert.Single(listed!).Name);
     }
 
@@ -43,7 +49,7 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
             "/api/campaigns",
             new CreateCampaignRequest("A campaign", "dnd5e", "1.4.2"));
 
-        var created = await response.Content.ReadFromJsonAsync<CampaignSummary>();
+        var created = await response.Content.ReadFromJsonAsync<CampaignSummary>(_jsonOptions);
 
         Assert.Equal("dnd5e", created?.SystemId);
         Assert.Equal("1.4.2", created?.SystemVersion);
@@ -74,7 +80,7 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
         await CreateCampaignAsync(mine, "Mine");
 
         using var theirs = await SignedInAsync("Stranger");
-        var listed = await theirs.GetFromJsonAsync<List<CampaignSummary>>("/api/campaigns");
+        var listed = await theirs.GetFromJsonAsync<List<CampaignSummary>>("/api/campaigns", _jsonOptions);
 
         Assert.Empty(listed!);
     }
@@ -86,7 +92,7 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
         await CreateAccountAsync("Stranger");
 
         using var mine = await SignedInAsync("Mattia");
-        var created = await (await CreateCampaignAsync(mine, "Mine")).Content.ReadFromJsonAsync<CampaignSummary>();
+        var created = await (await CreateCampaignAsync(mine, "Mine")).Content.ReadFromJsonAsync<CampaignSummary>(_jsonOptions);
 
         using var theirs = await SignedInAsync("Stranger");
         var response = await theirs.GetAsync(new Uri($"/api/campaigns/{created!.Id}", UriKind.Relative));
@@ -114,7 +120,7 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
         await CreateCampaignAsync(mattia, "Not the administrator's business");
 
         using var boss = await SignedInAsync("Boss");
-        Assert.Empty((await boss.GetFromJsonAsync<List<CampaignSummary>>("/api/campaigns"))!);
+        Assert.Empty((await boss.GetFromJsonAsync<List<CampaignSummary>>("/api/campaigns", _jsonOptions))!);
     }
 
     [Fact]
@@ -156,7 +162,7 @@ public class CampaignTests(PostgresFixture fixture) : IAsyncLifetime
         using var client = await SignedInAsync("Mattia");
 
         var created = await (await CreateCampaignAsync(client, "  Padded  "))
-            .Content.ReadFromJsonAsync<CampaignSummary>();
+            .Content.ReadFromJsonAsync<CampaignSummary>(_jsonOptions);
 
         Assert.Equal("Padded", created?.Name);
     }
