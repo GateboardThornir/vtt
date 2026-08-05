@@ -65,8 +65,12 @@ and the debugger working. Production containerises everything — see
 docker compose ps             # postgres should read "healthy"
 docker compose down           # stop; the data survives
 docker compose down -v        # stop and delete the data volume
-psql "host=localhost port=55432 dbname=vtt user=vtt"
+
+docker compose exec postgres psql -U vtt -d vtt    # a psql shell, nothing to install
 ```
+
+The container carries its own `psql`, so there is no client to install on the host. If you would
+rather use a local client or a GUI, connect to `localhost:55432` with the credentials from `.env`.
 
 **Changing `POSTGRES_PASSWORD` in `.env` after the first start does nothing.** The Postgres image
 applies credentials only while initialising an empty data directory; afterwards the old password

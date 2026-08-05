@@ -278,6 +278,12 @@ docker compose up -d
 docker compose ps          # postgres should read "healthy" within a few seconds
 ```
 
+To poke at the database, use the client inside the container — nothing to install on your side:
+
+```bash
+docker compose exec postgres psql -U vtt -d vtt
+```
+
 Start the server through the script rather than `dotnet run`: .NET does not read `.env`, and the
 script is what turns it into the connection string the server expects.
 
