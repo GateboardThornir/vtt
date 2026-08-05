@@ -40,6 +40,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(16)
             .IsRequired();
 
+        // Text, for the same reason as the state: this database gets read by hand, and a role
+        // column containing 1 would undo ADR 004's whole argument.
+        builder.Property(user => user.Role)
+            .HasConversion<string>()
+            .HasMaxLength(16)
+            .IsRequired();
+
         builder.Property(user => user.CreatedAt)
             .IsRequired();
 

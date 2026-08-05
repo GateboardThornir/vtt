@@ -36,7 +36,37 @@ public class User
 
     public AccountState State { get; private set; }
 
+    /// <summary>Platform-level role. Read per request; never carried in the session cookie.</summary>
+    public PlatformRole Role { get; private set; }
+
     public DateTimeOffset CreatedAt { get; private set; }
+
+    /// <summary>
+    /// Moves the account to a new state on an administrator's instruction.
+    /// </summary>
+    /// <remarks>
+    /// Approving and rejecting are the same operation with different destinations, so they share
+    /// one guard. Returns false for a transition that is not allowed rather than throwing: an
+    /// administrator clicking a stale button is an ordinary outcome, not an exceptional one.
+    /// </remarks>
+    public bool TransitionTo(AccountState state)
+    {
+        var allowed = (State, state) switch
+        {
+            (AccountState.Pending, AccountState.Active) => true,      // approve
+            (AccountState.Pending, AccountState.Disabled) => true,    // reject
+            (AccountState.Active, AccountState.Disabled) => true,     // disable
+            (AccountState.Disabled, AccountState.Active) => true,     // re-enable
+            _ => false,
+        };
+
+        if (allowed)
+        {
+            State = state;
+        }
+
+        return allowed;
+    }
 
     /// <summary>
     /// Creates a new account in <see cref="AccountState.Pending"/>.
@@ -85,6 +115,11 @@ public class User
     {
         var user = Register(username, passwordHash, createdAt);
         user.State = AccountState.Active;
+
+        // The bootstrap account is the administrator. ADR 008 noted that it could not be marked as
+        // one because the schema had no way to say it; task 014 gave it one, and this closes that
+        // gap. It also makes explicit what was already true: shell access is platform ownership.
+        user.Role = PlatformRole.Admin;
 
         return user;
     }

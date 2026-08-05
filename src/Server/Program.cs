@@ -40,6 +40,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAccounts();
+app.MapAccountAdministration();
 
 // Under /api so the Vite dev proxy needs one prefix (task 004) and Caddy one rule (task 101): a
 // root-level path would be swallowed by the SPA's index.html fallback unless special-cased.
