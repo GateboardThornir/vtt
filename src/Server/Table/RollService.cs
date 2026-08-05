@@ -48,7 +48,7 @@ internal sealed class RollService(
         context.Set<Roll>().Add(roll);
         await context.SaveChangesAsync(cancellationToken);
 
-        var username = await UsernameOf(rollerUserId, cancellationToken);
+        var username = await UsernameOfAsync(rollerUserId, cancellationToken);
         var recipients = await RecipientsOf(campaignId.Value, rollerUserId, visibility, cancellationToken);
 
         return new RollBroadcast(Line(roll, rollerUserId, username, result.Kept, result.Dropped), recipients);
@@ -146,7 +146,7 @@ internal sealed class RollService(
         };
     }
 
-    private Task<string> UsernameOf(Guid userId, CancellationToken cancellationToken) =>
+    private Task<string> UsernameOfAsync(Guid userId, CancellationToken cancellationToken) =>
         context.Set<User>()
             .AsNoTracking()
             .Where(user => user.Id == userId)
