@@ -200,7 +200,7 @@ public class PlaySessionTests(PostgresFixture fixture) : IAsyncLifetime
     {
         var response = await client.PostAsJsonAsync(
             "/api/campaigns",
-            new CreateCampaignRequest("A campaign", "dnd5e", "1.0"));
+            new CreateCampaignRequest("A campaign", "dnd5e", "1.0.0"));
 
         return (await response.Content.ReadFromJsonAsync<CampaignSummary>(_jsonOptions))!.Id;
     }

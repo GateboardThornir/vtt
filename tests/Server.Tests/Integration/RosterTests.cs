@@ -243,7 +243,7 @@ public class RosterTests(PostgresFixture fixture) : IAsyncLifetime
     {
         var response = await client.PostAsJsonAsync(
             "/api/campaigns",
-            new CreateCampaignRequest("A campaign", "dnd5e", "1.0"));
+            new CreateCampaignRequest("A campaign", "dnd5e", "1.0.0"));
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 

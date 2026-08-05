@@ -1,6 +1,6 @@
 # 032 — 5e module skeleton + sheet schema v1
 
-**Status:** not started
+**Status:** done
 **Depends on:** 031
 **Branch:** `task/032-5e-module-skeleton`
 
