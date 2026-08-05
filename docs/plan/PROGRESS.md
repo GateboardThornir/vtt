@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 020 — Campaign entity
+**Next task:** 021 — Campaign roster
 **Blocked on:** nothing
 
 ## Completed
@@ -32,6 +32,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 015 | Admin recovery codes | 2026-08-05 | Admin-mediated recovery with no email anywhere. `SecureToken` extracted now that 011 and 015 give two examples — the identical part only. Recovery restores the password and nothing else |
 | 016 | Authorization policies | 2026-08-05 | Declared policies replace 014's hand-rolled guard. Closes 013's gap: a disabled account's existing cookie now stops working on the next request rather than at expiry |
 | 017 | Auth UI | 2026-08-05 | Sign in, register from an invite link, awaiting-approval, admin queue. i18next infrastructure lands here (IT + EN) per 004's deviation. Enums now cross the wire as names — they were serialising as numbers, which the frontend would have rendered as raw keys |
+| 017a | Issue invites over HTTP | 2026-08-05 | Gap found while writing test instructions: `IInviteService` could mint invites from 011 and nothing could reach it, so closing the loop needed SQL by hand. 017's card listed the screen and did not build it |
 
 ## Deviations from the plan
 
