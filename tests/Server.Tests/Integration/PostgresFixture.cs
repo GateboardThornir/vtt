@@ -36,7 +36,20 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await _container.StartAsync();
+        try
+        {
+            await _container.StartAsync();
+        }
+        catch (Exception exception)
+        {
+            // Without this, a stopped Docker surfaces as whatever low-level socket or HTTP error
+            // the client happened to produce, which reads like a fault in the code under test.
+            throw new InvalidOperationException(
+                "Could not start the PostgreSQL test container. These tests need Docker running " +
+                "(see ADR 005). To run everything that does not, use: " +
+                "dotnet test --filter \"Category!=Integration\".",
+                exception);
+        }
 
         // An environment variable rather than WebApplicationFactory's UseSetting or
         // ConfigureAppConfiguration, and the reason is ordering. Program.cs resolves the
