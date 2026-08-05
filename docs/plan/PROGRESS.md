@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 014 — Admin approval queue
+**Next task:** 015 — Admin recovery codes
 **Blocked on:** nothing
 
 ## Completed
@@ -28,6 +28,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 011 | Invite tokens | 2026-08-05 | Hashed tokens, single-use via one conditional `UPDATE` (ADR 007). `TimeProvider` adopted. The check-then-act version was written and shown to let all 16 concurrent racers win before being replaced |
 | 012 | Registration via invite URL | 2026-08-05 | Endpoint plus the `create-account` bootstrap command (ADR 008), closing the gap open since 010. Registration is one transaction: without it, eight parallel racers left eight orphaned accounts |
 | 013 | Login / logout | 2026-08-05 | Cookie sessions carrying identity only. Wrong password and unknown username answer identically; state is checked only after the password verifies. First consumer of 010's rehash signal |
+| 014 | Admin approval queue | 2026-08-05 | Platform role column moved here from 016 — an approval queue anyone can call is not one. Approve, reject, disable and re-enable are one guarded transition. Roles read per request, never from the cookie |
 
 ## Deviations from the plan
 
@@ -37,6 +38,7 @@ worse than no plan.
 | Task | What changed | Why |
 |---|---|---|
 | 004 | i18next infrastructure moved from 098 to 017; 098 keeps full IT + EN coverage and the switcher | `.claude/rules/frontend.md` requires a translation layer from the first line of UI code, and the spec wants the infrastructure from the first release — but the roadmap parked it in Phase 3. Leaving it at 098 would ship every Phase 1 and 2 screen with hardcoded strings and turn 098 into archaeology. 017 is the first screen a user actually reads, so it lands there. 004 itself ships no i18next: its page is a diagnostic that 017 deletes |
+| 014 | The platform-role column moved from 016 to 014 | 010 deferred it as speculative because nothing read it. 014's approval queue must enforce against it, and a task cannot own a column an earlier task already depends on. 016 keeps what it was for: the policy infrastructure and the campaign-role resolver |
 | 004 | `GET /health` became `GET /api/health` | One proxy prefix in development and one Caddy rule at 101. A root-level path would also be swallowed by the SPA's index.html fallback for unknown routes unless special-cased |
 
 ## Open questions
@@ -45,7 +47,7 @@ Things surfaced during implementation that need a decision before they block som
 
 | Question | Raised in | Status |
 |---|---|---|
-| Does `User` need a platform-role column, and when? 016 owns the admin/member role, but 014's approval queue needs to know who the admin is before then | 010 | Settled for now: left out of 010 as speculative, and 016 adds it in a routine migration. Revisit if 014 lands first |
+| — | — | — |
 
 ## Deferred
 

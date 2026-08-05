@@ -1,6 +1,6 @@
 # 014 — Admin approval queue
 
-**Status:** not started
+**Status:** done
 **Depends on:** 013 (a signed-in caller to check)
 **Branch:** `task/014-admin-approval-queue`
 

@@ -17,7 +17,8 @@ public static class AccountServices
             // thread-safe.
             .AddScoped<IInviteService, InviteService>()
             .AddScoped<IRegistrationService, RegistrationService>()
-            .AddScoped<ISignInService, SignInService>();
+            .AddScoped<ISignInService, SignInService>()
+            .AddScoped<IAccountAdministration, AccountAdministration>();
 
     /// <summary>
     /// Registers cookie authentication. Separate from <see cref="AddAccounts"/> because it needs to
