@@ -1,6 +1,6 @@
 # 031 — JSON schema validation infrastructure
 
-**Status:** not started
+**Status:** done
 **Depends on:** 030
 **Branch:** `task/031-json-schema-validation`
 

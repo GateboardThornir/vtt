@@ -6,6 +6,10 @@
   <ItemGroup>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
 
+    <!-- Schema validation for system-defined documents. The platform cannot know what a character
+         sheet contains, so the module declares a schema and this checks documents against it. -->
+    <PackageReference Include="JsonSchema.Net" Version="9.4.0" />
+
     <!-- Applies snake_case to tables, columns, keys, foreign keys and indexes as a real EF
          convention rather than a post-pass over the built model, which is what makes it correct
          for owned types and discriminators. See ADR 004. -->
