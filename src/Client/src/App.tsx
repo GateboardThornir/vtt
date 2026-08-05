@@ -21,7 +21,7 @@ export default function App(): JSX.Element {
 
 function Shell(): JSX.Element {
   const { t } = useTranslation()
-  const { session, loading, signOut } = useSession()
+  const { session, loading, unreachable, signOut } = useSession()
 
   return (
     <main>
@@ -42,7 +42,17 @@ function Shell(): JSX.Element {
         <Route
           path="*"
           element={
-            loading ? <p>{t('common.loading')}</p> : session === null ? <SignInPage /> : <SignedIn />
+            loading ? (
+              <p>{t('common.loading')}</p>
+            ) : unreachable ? (
+              // Not a sign-in form: the server is not there, and offering one would invite
+              // typing a password at nothing and concluding the credentials were wrong.
+              <p role="alert">{t('common.serverUnreachable')}</p>
+            ) : session === null ? (
+              <SignInPage />
+            ) : (
+              <SignedIn />
+            )
           }
         />
       </Routes>

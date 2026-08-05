@@ -12,6 +12,7 @@ export const it: typeof en = {
     signOut: 'Esci',
     loading: 'Caricamento…',
     language: 'Lingua',
+    serverUnreachable: 'Impossibile raggiungere il server. Potrebbe non essere in esecuzione.',
     unexpectedError: 'Qualcosa è andato storto. Riprova.',
   },
   signIn: {
