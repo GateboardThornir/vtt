@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 034 — Character entity
+**Next task:** 035 — Character sheet UI
 **Blocked on:** nothing
 
 ## Completed
@@ -42,6 +42,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 031 | JSON schema validation | 2026-08-05 | Shape only, never rules — the floor a Master override cannot go through. Compiled schemas cached; errors carry the path to the offending value |
 | 032 | 5e module skeleton + sheet schema v1 | 2026-08-05 | `dnd5e 1.0.0`. Raw and derived separated in the schema; `additionalProperties` false throughout so a typo fails. `MigrateSheet` refuses unknown versions rather than passing documents through |
 | 033 | `RecomputeDerived` for 5e | 2026-08-05 | Modifiers, saves, all eighteen skills, passive perception. Floor division rather than C#'s truncation, which is the classic bug here. `derived` is replaced outright, never merged |
+| 034 | Character entity | 2026-08-05 | First JSONB column. Every write validates against the campaign's **pinned** module then recomputes derived, in the service so no path can forget |
 
 ## Deviations from the plan
 
