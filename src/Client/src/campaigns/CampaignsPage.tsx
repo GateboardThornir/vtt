@@ -4,18 +4,24 @@ import { Link } from 'react-router'
 import {
   createCampaign,
   listCampaigns,
+  listGameSystems,
   listInvitations,
   respondToInvitation,
   type CampaignSummary,
+  type GameSystemSummary,
 } from '../api/campaigns'
+
+function key(system: GameSystemSummary): string {
+  return `${system.systemId}@${system.version}`
+}
 
 export function CampaignsPage(): JSX.Element {
   const { t } = useTranslation()
   const [campaigns, setCampaigns] = useState<CampaignSummary[] | null>(null)
   const [invitations, setInvitations] = useState<CampaignSummary[]>([])
   const [name, setName] = useState('')
-  const [systemId, setSystemId] = useState('dnd5e')
-  const [version, setVersion] = useState('1.0')
+  const [systems, setSystems] = useState<GameSystemSummary[]>([])
+  const [chosen, setChosen] = useState('')
 
   async function load(): Promise<void> {
     const [mine, invited] = await Promise.all([listCampaigns(), listInvitations()])
@@ -28,11 +34,22 @@ export function CampaignsPage(): JSX.Element {
     let cancelled = false
 
     void (async () => {
-      const [mine, invited] = await Promise.all([listCampaigns(), listInvitations()])
+      const [mine, invited, available] = await Promise.all([
+        listCampaigns(),
+        listInvitations(),
+        listGameSystems(),
+      ])
 
-      if (!cancelled) {
-        setCampaigns(mine.kind === 'ok' ? mine.value : [])
-        setInvitations(invited.kind === 'ok' ? invited.value : [])
+      if (cancelled) {
+        return
+      }
+
+      setCampaigns(mine.kind === 'ok' ? mine.value : [])
+      setInvitations(invited.kind === 'ok' ? invited.value : [])
+
+      if (available.kind === 'ok') {
+        setSystems(available.value)
+        setChosen(available.value.length > 0 ? key(available.value[0]!) : '')
       }
     })()
 
@@ -43,7 +60,14 @@ export function CampaignsPage(): JSX.Element {
 
   async function submit(event: FormEvent): Promise<void> {
     event.preventDefault()
-    await createCampaign(name, systemId, version)
+
+    const system = systems.find((candidate) => key(candidate) === chosen)
+
+    if (system === undefined) {
+      return
+    }
+
+    await createCampaign(name, system.systemId, system.version)
     setName('')
     await load()
   }
@@ -101,13 +125,17 @@ export function CampaignsPage(): JSX.Element {
           {t('campaigns.name')}
           <input value={name} onChange={(event) => setName(event.target.value)} />
         </label>
+        {/* Chosen, not typed. A pin that does not resolve makes a campaign in which no character
+            can ever be created, and the mistake surfaces long after it is made. */}
         <label>
           {t('campaigns.system')}
-          <input value={systemId} onChange={(event) => setSystemId(event.target.value)} />
-        </label>
-        <label>
-          {t('campaigns.version')}
-          <input value={version} onChange={(event) => setVersion(event.target.value)} />
+          <select value={chosen} onChange={(event) => setChosen(event.target.value)}>
+            {systems.map((system) => (
+              <option key={key(system)} value={key(system)}>
+                {system.systemId} {system.version}
+              </option>
+            ))}
+          </select>
         </label>
         <button type="submit">{t('campaigns.submit')}</button>
       </form>

@@ -106,6 +106,24 @@ describe('the campaign list', () => {
     expect(await screen.findByRole('button', { name: /accept/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /decline/i })).toBeInTheDocument()
   })
+
+  it('offers the registered systems rather than asking you to type one', async () => {
+    // The bug this closes: the form took a system id and a version as free text, so a typo
+    // produced a campaign whose pin resolved to nothing — and no character could ever be created
+    // in it. The failure surfaced much later than the mistake.
+    stubFetch((url) =>
+      url === '/api/systems'
+        ? { status: 200, body: [{ systemId: 'dnd5e', version: '1.0.0' }] }
+        : undefined,
+    )
+
+    renderAt('/campaigns')
+
+    const chooser = await screen.findByLabelText(/game system/i)
+
+    expect(chooser.tagName).toBe('SELECT')
+    expect(screen.getByRole('option', { name: /dnd5e 1\.0\.0/ })).toBeInTheDocument()
+  })
 })
 
 describe('a campaign', () => {
