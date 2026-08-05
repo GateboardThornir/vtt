@@ -198,6 +198,115 @@ public class TableHubTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal(1, announcements);
     }
 
+    [Fact]
+    public async Task AMemberCanSpeakAndTheTableHearsIt()
+    {
+        var heard = new TaskCompletionSource<ChatLine>();
+
+        await using var master = await ConnectAsync("Master");
+        master.On<ChatLine>("ChatSaid", line => heard.TrySetResult(line));
+        await master.InvokeAsync<bool>("JoinSession", _openSession);
+
+        await using var player = await ConnectAsync("Player");
+        await player.InvokeAsync<bool>("JoinSession", _openSession);
+
+        Assert.True(await player.InvokeAsync<bool>("Say", _openSession, "Well met.", ChatVoice.InCharacter));
+
+        var line = await heard.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Equal("Well met.", line.Body);
+        Assert.Equal("Player", line.AuthorUsername);
+        Assert.Equal(ChatVoice.InCharacter, line.Voice);
+    }
+
+    [Fact]
+    public async Task HistoryArrivesOnJoinSoAMessageSurvivesAReconnect()
+    {
+        await using var first = await ConnectAsync("Master");
+        await first.InvokeAsync<bool>("JoinSession", _openSession);
+        await first.InvokeAsync<bool>("Say", _openSession, "Before the crash.", ChatVoice.OutOfCharacter);
+
+        var history = new TaskCompletionSource<IReadOnlyList<ChatLine>>();
+
+        await using var second = await ConnectAsync("Player");
+        second.On<IReadOnlyList<ChatLine>>("ChatHistory", lines => history.TrySetResult(lines));
+        await second.InvokeAsync<bool>("JoinSession", _openSession);
+
+        var lines = await history.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Equal("Before the crash.", Assert.Single(lines).Body);
+    }
+
+    [Fact]
+    public async Task AStrangerCannotSpeakAtATableTheyWereNeverAdmittedTo()
+    {
+        await using var stranger = await ConnectAsync("Stranger");
+
+        Assert.False(await stranger.InvokeAsync<bool>("Say", _openSession, "Hello?", ChatVoice.OutOfCharacter));
+    }
+
+    [Fact]
+    public async Task SomebodyRemovedFromTheRosterCanNoLongerSpeak()
+    {
+        // Admission is re-checked on every send. Being in the group is not proof of anything later:
+        // the connection stays in it until the client notices, and the check is what stops them.
+        await using var player = await ConnectAsync("Player");
+        await player.InvokeAsync<bool>("JoinSession", _openSession);
+        Assert.True(await player.InvokeAsync<bool>("Say", _openSession, "Still here.", ChatVoice.OutOfCharacter));
+
+        using var master = await SignedInAsync("Master");
+        var roster = await master.GetFromJsonAsync<List<RosterEntry>>(
+            $"/api/campaigns/{_campaign}/roster",
+            _jsonOptions);
+        var playerId = roster!.Single(entry => entry.Username == "Player").UserId;
+
+        await master.DeleteAsync(new Uri($"/api/campaigns/{_campaign}/roster/{playerId}", UriKind.Relative));
+
+        Assert.False(await player.InvokeAsync<bool>("Say", _openSession, "Let me back in.", ChatVoice.OutOfCharacter));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task AnEmptyMessageIsRefused(string body)
+    {
+        await using var master = await ConnectAsync("Master");
+        await master.InvokeAsync<bool>("JoinSession", _openSession);
+
+        Assert.False(await master.InvokeAsync<bool>("Say", _openSession, body, ChatVoice.OutOfCharacter));
+    }
+
+    [Fact]
+    public async Task AnOversizedMessageIsRefused()
+    {
+        await using var master = await ConnectAsync("Master");
+        await master.InvokeAsync<bool>("JoinSession", _openSession);
+
+        var tooLong = new string('a', ChatMessage.BodyMaxLength + 1);
+
+        Assert.False(await master.InvokeAsync<bool>("Say", _openSession, tooLong, ChatVoice.OutOfCharacter));
+    }
+
+    [Fact]
+    public async Task BothVoicesRoundTrip()
+    {
+        await using var master = await ConnectAsync("Master");
+        await master.InvokeAsync<bool>("JoinSession", _openSession);
+
+        await master.InvokeAsync<bool>("Say", _openSession, "In character.", ChatVoice.InCharacter);
+        await master.InvokeAsync<bool>("Say", _openSession, "Out of character.", ChatVoice.OutOfCharacter);
+
+        var history = new TaskCompletionSource<IReadOnlyList<ChatLine>>();
+        await using var listener = await ConnectAsync("Player");
+        listener.On<IReadOnlyList<ChatLine>>("ChatHistory", lines => history.TrySetResult(lines));
+        await listener.InvokeAsync<bool>("JoinSession", _openSession);
+
+        var lines = await history.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Equal(ChatVoice.InCharacter, lines[0].Voice);
+        Assert.Equal(ChatVoice.OutOfCharacter, lines[1].Voice);
+    }
+
     private async Task<HubConnection> ConnectAsync(string username)
     {
         var client = await SignedInAsync(username);

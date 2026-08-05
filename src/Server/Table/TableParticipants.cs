@@ -76,6 +76,7 @@ public static class TableServices
     public static IServiceCollection AddTable(this IServiceCollection services) =>
         services
             .AddScoped<ITableAccess, TableAccess>()
+            .AddScoped<IChatService, ChatService>()
 
             // Singleton because presence is process-wide, and in memory because it is worthless
             // after a restart.
