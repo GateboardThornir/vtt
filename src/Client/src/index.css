@@ -1,0 +1,50 @@
+/* Deliberately minimal. Choosing a styling approach — CSS modules, a component kit, a design
+   system — is a decision with no requirements behind it yet; task 017 makes it with real screens
+   in hand. */
+
+:root {
+  color-scheme: light dark;
+  font: 16px/1.5 system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 2rem 1rem;
+}
+
+.subtitle {
+  opacity: 0.7;
+}
+
+.status {
+  border: 1px solid;
+  border-radius: 0.5rem;
+  padding: 0 1rem 1rem;
+}
+
+.status.good {
+  border-color: #2f855a;
+}
+
+.status.bad {
+  border-color: #c53030;
+}
+
+.status dl div {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.status dt::after {
+  content: ':';
+}
+
+.status dd {
+  font-weight: 600;
+  margin: 0;
+}
