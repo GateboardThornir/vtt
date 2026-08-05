@@ -1,6 +1,6 @@
 # 043 — Roll visibility
 
-**Status:** not started
+**Status:** done
 **Depends on:** 042
 **Branch:** `task/043-roll-visibility`
 

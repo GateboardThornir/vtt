@@ -20,7 +20,8 @@ namespace Vtt.Server.Table;
 public sealed class TableHub(
     ITableAccess access,
     ITableParticipants participants,
-    IChatService chat) : Hub<ITableClient>
+    IChatService chat,
+    IRollService rolls) : Hub<ITableClient>
 {
     /// <summary>
     /// Joins the caller to a session's table.
@@ -61,12 +62,49 @@ public sealed class TableHub(
             await Clients.Caller.ChatHistory(history);
         }
 
+        var pastRolls = await rolls.HistoryAsync(sessionId, participant.UserId);
+
+        if (pastRolls is not null)
+        {
+            // Already filtered for this caller: a reconnecting player never learns of a roll that
+            // was hidden from them while they were away.
+            await Clients.Caller.RollHistory(pastRolls);
+        }
+
         if (participants.CountFor(sessionId, participant.UserId) == 1)
         {
             // Announced once per person, not once per tab.
             await Clients.OthersInGroup(TableGroups.ForSession(sessionId))
                 .ParticipantJoined(participant);
         }
+
+        return true;
+    }
+
+    /// <summary>Rolls dice at the table.</summary>
+    /// <remarks>
+    /// Sent to the accounts the service says may see it, never to the group. Broadcasting to
+    /// everyone and letting clients hide what they should not have is the failure mode
+    /// <c>.claude/rules/security.md</c> exists to forbid, and SignalR makes it the easy path.
+    /// </remarks>
+    [HubMethodName("Roll")]
+    public async Task<bool> RollAsync(Guid sessionId, string expression, RollVisibility visibility)
+    {
+        var userId = SessionCookie.UserIdOf(Context.User!);
+
+        if (userId is null)
+        {
+            return false;
+        }
+
+        var broadcast = await rolls.RollAsync(sessionId, userId.Value, expression, visibility);
+
+        if (broadcast is null)
+        {
+            return false;
+        }
+
+        await Clients.Users([.. broadcast.Recipients.Select(id => id.ToString())]).Rolled(broadcast.Line);
 
         return true;
     }

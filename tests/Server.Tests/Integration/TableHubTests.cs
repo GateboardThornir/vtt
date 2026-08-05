@@ -307,6 +307,147 @@ public class TableHubTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal(ChatVoice.OutOfCharacter, lines[1].Voice);
     }
 
+    [Fact]
+    public async Task APublicRollReachesEveryoneAtTheTable()
+    {
+        var heard = new TaskCompletionSource<RollLine>();
+
+        await using var master = await ConnectAsync("Master");
+        master.On<RollLine>("Rolled", roll => heard.TrySetResult(roll));
+        await master.InvokeAsync<bool>("JoinSession", _openSession);
+
+        await using var player = await ConnectAsync("Player");
+        await player.InvokeAsync<bool>("JoinSession", _openSession);
+
+        Assert.True(await player.InvokeAsync<bool>("Roll", _openSession, "2d6+3", RollVisibility.Public));
+
+        var roll = await heard.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Equal("2d6+3", roll.Expression);
+        Assert.Equal(2, roll.Kept.Count);
+        Assert.Equal(roll.Kept.Sum() + roll.Modifier, roll.Total);
+    }
+
+    [Fact]
+    public async Task APrivateRollReachesTheRollerAndTheMasterAndNobodyElse()
+    {
+        await CreateAccountAsync("Second");
+
+        using var master = await SignedInAsync("Master");
+        await master.PostAsJsonAsync($"/api/campaigns/{_campaign}/roster", new InviteMemberRequest("Second"));
+
+        using var secondHttp = await SignedInAsync("Second");
+        await secondHttp.PostAsJsonAsync(
+            $"/api/campaigns/{_campaign}/roster/response",
+            new RespondToInvitationRequest(true));
+
+        var masterHeard = new TaskCompletionSource<RollLine>();
+        var rollerHeard = new TaskCompletionSource<RollLine>();
+        var bystanderPayloads = new List<RollLine>();
+
+        await using var masterConnection = await ConnectAsync("Master");
+        masterConnection.On<RollLine>("Rolled", roll => masterHeard.TrySetResult(roll));
+        await masterConnection.InvokeAsync<bool>("JoinSession", _openSession);
+
+        await using var bystander = await ConnectAsync("Second");
+        bystander.On<RollLine>("Rolled", roll => bystanderPayloads.Add(roll));
+        await bystander.InvokeAsync<bool>("JoinSession", _openSession);
+
+        await using var roller = await ConnectAsync("Player");
+        roller.On<RollLine>("Rolled", roll => rollerHeard.TrySetResult(roll));
+        await roller.InvokeAsync<bool>("JoinSession", _openSession);
+
+        Assert.True(await roller.InvokeAsync<bool>("Roll", _openSession, "d20", RollVisibility.Private));
+
+        var seenByMaster = await masterHeard.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        var seenByRoller = await rollerHeard.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.Equal(seenByRoller.Id, seenByMaster.Id);
+
+        await Task.Delay(500);
+
+        // The half that matters: the bystander received *nothing at all*. Not a redacted event and
+        // not a placeholder — "somebody rolled something" is itself a disclosure.
+        Assert.Empty(bystanderPayloads);
+    }
+
+    [Fact]
+    public async Task AMasterOnlyRollReachesTheMasterAlone()
+    {
+        var masterHeard = new TaskCompletionSource<RollLine>();
+        var playerPayloads = new List<RollLine>();
+
+        await using var masterConnection = await ConnectAsync("Master");
+        masterConnection.On<RollLine>("Rolled", roll => masterHeard.TrySetResult(roll));
+        await masterConnection.InvokeAsync<bool>("JoinSession", _openSession);
+
+        await using var player = await ConnectAsync("Player");
+        player.On<RollLine>("Rolled", roll => playerPayloads.Add(roll));
+        await player.InvokeAsync<bool>("JoinSession", _openSession);
+
+        Assert.True(await masterConnection.InvokeAsync<bool>("Roll", _openSession, "d20", RollVisibility.MasterOnly));
+
+        await masterHeard.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await Task.Delay(500);
+
+        Assert.Empty(playerPayloads);
+    }
+
+    [Fact]
+    public async Task APlayerCannotMakeAMasterOnlyRoll()
+    {
+        await using var player = await ConnectAsync("Player");
+        await player.InvokeAsync<bool>("JoinSession", _openSession);
+
+        // Hiding a roll from the person running the game is not a thing the table means.
+        Assert.False(await player.InvokeAsync<bool>("Roll", _openSession, "d20", RollVisibility.MasterOnly));
+    }
+
+    [Fact]
+    public async Task HistoryHidesRollsAPlayerWasNeverEntitledTo()
+    {
+        await using var masterConnection = await ConnectAsync("Master");
+        await masterConnection.InvokeAsync<bool>("JoinSession", _openSession);
+        await masterConnection.InvokeAsync<bool>("Roll", _openSession, "d20", RollVisibility.MasterOnly);
+        await masterConnection.InvokeAsync<bool>("Roll", _openSession, "d6", RollVisibility.Public);
+
+        var history = new TaskCompletionSource<IReadOnlyList<RollLine>>();
+
+        await using var player = await ConnectAsync("Player");
+        player.On<IReadOnlyList<RollLine>>("RollHistory", rolls => history.TrySetResult(rolls));
+        await player.InvokeAsync<bool>("JoinSession", _openSession);
+
+        var seen = await history.Task.WaitAsync(TimeSpan.FromSeconds(10));
+
+        // A reconnecting player must not learn of what was hidden while they were away.
+        Assert.Equal("d6", Assert.Single(seen).Expression);
+    }
+
+    [Fact]
+    public async Task TheMasterSeesEverythingInHistory()
+    {
+        await using var player = await ConnectAsync("Player");
+        await player.InvokeAsync<bool>("JoinSession", _openSession);
+        await player.InvokeAsync<bool>("Roll", _openSession, "d20", RollVisibility.Private);
+
+        var history = new TaskCompletionSource<IReadOnlyList<RollLine>>();
+
+        await using var masterConnection = await ConnectAsync("Master");
+        masterConnection.On<IReadOnlyList<RollLine>>("RollHistory", rolls => history.TrySetResult(rolls));
+        await masterConnection.InvokeAsync<bool>("JoinSession", _openSession);
+
+        Assert.Single(await history.Task.WaitAsync(TimeSpan.FromSeconds(10)));
+    }
+
+    [Fact]
+    public async Task AnUnparseableExpressionIsRefused()
+    {
+        await using var master = await ConnectAsync("Master");
+        await master.InvokeAsync<bool>("JoinSession", _openSession);
+
+        Assert.False(await master.InvokeAsync<bool>("Roll", _openSession, "banana", RollVisibility.Public));
+    }
+
     private async Task<HubConnection> ConnectAsync(string username)
     {
         var client = await SignedInAsync(username);
