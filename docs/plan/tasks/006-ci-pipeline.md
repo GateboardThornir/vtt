@@ -1,6 +1,6 @@
 # 006 — CI pipeline
 
-**Status:** not started
+**Status:** done
 **Depends on:** 005 (there must be suites worth running)
 **Branch:** `task/006-ci-pipeline`
 
