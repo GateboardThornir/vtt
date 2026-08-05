@@ -1,6 +1,6 @@
 # 040 — SignalR hub scaffold
 
-**Status:** not started
+**Status:** done
 **Depends on:** 035
 **Branch:** `task/040-signalr-hub-scaffold`
 
