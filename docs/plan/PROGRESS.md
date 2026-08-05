@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 013 — Login / logout
+**Next task:** 014 — Admin approval queue
 **Blocked on:** nothing
 
 ## Completed
@@ -27,6 +27,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 010 | User entity + password hashing | 2026-08-05 | First domain table and first module folder. Identity declined, its hasher adopted (ADR 006). EF derived the table name `user`, a PostgreSQL reserved word — caught by reading the migration, fixed with an explicit `ToTable("users")` |
 | 011 | Invite tokens | 2026-08-05 | Hashed tokens, single-use via one conditional `UPDATE` (ADR 007). `TimeProvider` adopted. The check-then-act version was written and shown to let all 16 concurrent racers win before being replaced |
 | 012 | Registration via invite URL | 2026-08-05 | Endpoint plus the `create-account` bootstrap command (ADR 008), closing the gap open since 010. Registration is one transaction: without it, eight parallel racers left eight orphaned accounts |
+| 013 | Login / logout | 2026-08-05 | Cookie sessions carrying identity only. Wrong password and unknown username answer identically; state is checked only after the password verifies. First consumer of 010's rehash signal |
 
 ## Deviations from the plan
 
@@ -57,6 +58,8 @@ Work consciously postponed, with the task it should attach to.
 | Coverage measurement and thresholds | when there is domain logic worth covering | A coverage number over a codebase with no rules engine is theatre |
 | End-to-end browser testing | when a flow exists that is worth driving | The frontend is one diagnostic page; 017's auth screens are the first candidate |
 | Confirming the no-Docker failure message against a genuinely stopped Docker | next time Docker Desktop is restarted | 005 could not simulate it: `DOCKER_HOST` overrides are ignored by Testcontainers' socket discovery, and Docker Desktop runs Windows-side. An explicit guard in `PostgresFixture` makes the message deterministic, verified by forcing a container start failure — but the real stopped-Docker path is untested |
+| Login rate limiting and lockout after repeated failures | when the platform is deployed, or 102 | 013 ships no lockout, so passwords can be tried indefinitely. Acceptable for an undeployed private tool; not acceptable once it is reachable |
+| Persisting data protection keys | 101 | 013's session cookie is signed with keys that default to the local filesystem. A container without a persistent volume regenerates them on restart and silently signs everybody out |
 | Connection string for IDE-launched debugging | when it first bites | `scripts/dev-server.sh` covers the terminal; `appsettings.Development.local.json` is already gitignored for the other case |
 | **Enabling branch protection on `main`** | **outstanding — manual** | CI is advisory until GitHub is told to require it. Branch protection is a repository setting, not a file, so it cannot be committed: Settings → Branches → require the `Backend` and `Frontend` checks. Until then a red build blocks nothing |
 | TypeScript 7 upgrade | when `typescript-eslint` supports it | 004 holds TS at 6.0.x because `typescript-eslint` declares `>=4.8.4 <6.1.0`. TS 7's native compiler is stable and much faster; the alternative unlock is switching to Oxlint, which `create-vite` now scaffolds by default but which cannot enforce all of `.claude/rules/frontend.md` |
