@@ -23,8 +23,72 @@ internal sealed class Dnd5eSystem : IGameSystem
 
     public JsonNode CompendiumEntrySchema { get; } = JsonNode.Parse(Dnd5eSchemas.CompendiumEntry)!;
 
-    /// <remarks>Task 033 fills this in. Returning the sheet untouched until then is honest.</remarks>
-    public SheetDocument RecomputeDerived(SheetDocument sheet) => sheet;
+    /// <remarks>
+    /// Pure and total: it returns a new document, never mutates the one it was given, and never
+    /// half-fills <c>derived</c> — partially computed values are worse than none, because they look
+    /// authoritative.
+    /// <para>
+    /// <c>derived</c> is replaced outright rather than merged. Whatever was there was either
+    /// computed by a previous call or written by hand, and neither is a reason to keep it. That is
+    /// precisely what makes the Master override path safe: an override writes raw fields, this runs
+    /// afterwards unconditionally, and the derived values cannot drift from what they derive from.
+    /// </para>
+    /// </remarks>
+    public SheetDocument RecomputeDerived(SheetDocument sheet)
+    {
+        var copy = sheet.DeepCopy();
+        var root = copy.Root;
+
+        var abilities = root["abilities"]?.AsObject();
+
+        if (abilities is null)
+        {
+            // Nothing to derive from. The schema requires abilities, so this is only reachable for
+            // a document that has not been validated — returning it untouched is honest.
+            return copy;
+        }
+
+        var proficiencyBonus = root["proficiencyBonus"]?.GetValue<int>() ?? 0;
+
+        var modifiers = new JsonObject();
+
+        foreach (var ability in Dnd5eRules.Abilities)
+        {
+            modifiers[ability] = Dnd5eRules.AbilityModifier(abilities[ability]?.GetValue<int>() ?? 10);
+        }
+
+        var proficientSaves = Names(root["savingThrowProficiencies"]);
+        var saves = new JsonObject();
+
+        foreach (var ability in Dnd5eRules.Abilities)
+        {
+            saves[ability] = modifiers[ability]!.GetValue<int>()
+                + (proficientSaves.Contains(ability) ? proficiencyBonus : 0);
+        }
+
+        var proficientSkills = Names(root["skillProficiencies"]);
+        var skills = new JsonObject();
+
+        foreach (var (skill, ability) in Dnd5eRules.Skills)
+        {
+            skills[skill] = modifiers[ability]!.GetValue<int>()
+                + (proficientSkills.Contains(skill) ? proficiencyBonus : 0);
+        }
+
+        root["derived"] = new JsonObject
+        {
+            ["abilityModifiers"] = modifiers,
+            ["savingThrows"] = saves,
+            ["skills"] = skills,
+            ["passivePerception"] = Dnd5eRules.PassivePerception(skills["perception"]!.GetValue<int>()),
+        };
+
+        return copy;
+    }
+
+    private static HashSet<string> Names(JsonNode? array) =>
+        array?.AsArray().Select(entry => entry?.GetValue<string>() ?? string.Empty).ToHashSet(StringComparer.Ordinal)
+        ?? new HashSet<string>(StringComparer.Ordinal);
 
     /// <remarks>
     /// There is no earlier version to come from, so every source version is unknown and refused.
