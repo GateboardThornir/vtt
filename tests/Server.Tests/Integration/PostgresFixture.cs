@@ -2,6 +2,8 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
+using Respawn;
 using Testcontainers.PostgreSql;
 using Vtt.Server.Infrastructure;
 
@@ -28,6 +30,7 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     private string? _previousConnectionString;
     private WebApplicationFactory<Program>? _factory;
+    private Respawner? _respawner;
 
     public WebApplicationFactory<Program> Factory =>
         _factory ?? throw new InvalidOperationException("The fixture has not been initialised.");
@@ -68,7 +71,49 @@ public sealed class PostgresFixture : IAsyncLifetime
         // database it owns is exactly the deliberate, explicit application the ADR asks for.
         using var scope = _factory.Services.CreateScope();
         await scope.ServiceProvider.GetRequiredService<VttDbContext>().Database.MigrateAsync();
+
+        // Built after migrating, because Respawn inspects the schema to work out the order in
+        // which tables can be emptied without tripping foreign keys.
+        await using var connection = new NpgsqlConnection(_container.GetConnectionString());
+        await connection.OpenAsync();
+
+        _respawner = await Respawner.CreateAsync(
+            connection,
+            new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.Postgres,
+                SchemasToInclude = ["public"],
+
+                // Emptying this would tell EF the schema had never been built, and the next
+                // migration run would try to create tables that already exist.
+                TablesToIgnore = [new Respawn.Graph.Table("public", "__EFMigrationsHistory")],
+            });
     }
+
+    /// <summary>
+    /// Empties every table, leaving the schema and the migration history intact.
+    /// </summary>
+    /// <remarks>
+    /// Called before each integration test. Until task 010 the integration tests wrote nothing, so
+    /// the container's contents did not matter; the moment tests insert rows, one test's leftovers
+    /// become the next one's inexplicable failure — and the failure usually depends on execution
+    /// order, which makes it look like flakiness.
+    /// </remarks>
+    public async Task ResetAsync()
+    {
+        if (_respawner is null)
+        {
+            throw new InvalidOperationException("The fixture has not been initialised.");
+        }
+
+        await using var connection = new NpgsqlConnection(_container.GetConnectionString());
+        await connection.OpenAsync();
+
+        await _respawner.ResetAsync(connection);
+    }
+
+    /// <summary>Opens a connection to the test database, for assertions that need raw SQL.</summary>
+    public NpgsqlConnection CreateConnection() => new(_container.GetConnectionString());
 
     public async Task DisposeAsync()
     {
