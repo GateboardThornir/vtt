@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 022 — In-app notifications
+**Next task:** 023 — Campaign list and detail UI
 **Blocked on:** nothing
 
 ## Completed
@@ -35,6 +35,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 017a | Issue invites over HTTP | 2026-08-05 | Gap found while writing test instructions: `IInviteService` could mint invites from 011 and nothing could reach it, so closing the loop needed SQL by hand. 017's card listed the screen and did not build it |
 | 020 | Campaign entity | 2026-08-05 | Creator becomes Master; `(SystemId, SystemVersion)` pinned from the first campaign, stored but not validated until 030. A campaign you cannot see is a 404, never a 403 |
 | 021 | Campaign roster | 2026-08-05 | Master moves from a column into the roster; the campaign-role resolver lands here per 016's deviation. The generated migration dropped `master_user_id` before the roster existed — reordered by hand and a backfill added |
+| 022 | In-app notifications | 2026-08-05 | The only channel the platform has, since it collects no email. Payload is a kind plus one parameter, never a sentence, so it can be translated. Marking read is scoped by recipient inside the UPDATE |
 
 ## Deviations from the plan
 

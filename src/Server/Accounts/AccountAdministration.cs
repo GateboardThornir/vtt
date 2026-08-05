@@ -1,10 +1,12 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Vtt.Server.Infrastructure;
+using Vtt.Server.Notifications;
 
 namespace Vtt.Server.Accounts;
 
-internal sealed class AccountAdministration(VttDbContext context) : IAccountAdministration
+internal sealed class AccountAdministration(VttDbContext context, INotificationService notifications)
+    : IAccountAdministration
 {
     public async Task<IReadOnlyList<AccountSummary>> PendingAsync(
         CancellationToken cancellationToken = default) =>
@@ -33,6 +35,16 @@ internal sealed class AccountAdministration(VttDbContext context) : IAccountAdmi
         }
 
         await context.SaveChangesAsync(cancellationToken);
+
+        // The only way an applicant finds out. There is no email to send.
+        if (state is AccountState.Active or AccountState.Disabled)
+        {
+            await notifications.RaiseAsync(
+                accountId,
+                state == AccountState.Active ? NotificationKind.AccountApproved : NotificationKind.AccountRejected,
+                subject: null,
+                cancellationToken);
+        }
 
         return TransitionResult.Applied;
     }
