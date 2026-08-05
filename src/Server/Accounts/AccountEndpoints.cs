@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Vtt.Server.Accounts;
@@ -12,7 +14,73 @@ public static class AccountEndpoints
     {
         endpoints.MapPost("/api/registration", RegisterAsync);
 
+        endpoints.MapPost("/api/session", SignInAsync);
+        // Cast because a handler taking only HttpContext otherwise binds as a RequestDelegate,
+        // whose return value is discarded — the 204 would never be written.
+        endpoints.MapDelete("/api/session", (Delegate)SignOutAsync);
+        endpoints.MapGet("/api/session", GetSession);
+
         return endpoints;
+    }
+
+    private static async Task<Results<Ok<SessionResponse>, UnauthorizedHttpResult, ProblemHttpResult>>
+        SignInAsync(
+            SignInRequest request,
+            ISignInService signIn,
+            HttpContext http,
+            CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var (outcome, user) = await signIn.AuthenticateAsync(
+            request.Username,
+            request.Password,
+            cancellationToken);
+
+        switch (outcome)
+        {
+            case SignInOutcome.Succeeded when user is not null:
+                await http.SignInAsync(SessionCookie.Scheme, SessionCookie.PrincipalFor(user));
+
+                return TypedResults.Ok(new SessionResponse(user.Id, user.Username));
+
+            // Both of these are only reachable once the password has been verified, so naming the
+            // reason tells the holder nothing they have not already proved they know.
+            case SignInOutcome.AwaitingApproval:
+                return TypedResults.Problem(
+                    title: "awaiting_approval",
+                    detail: "This account is waiting for an administrator to approve it.",
+                    statusCode: StatusCodes.Status403Forbidden);
+
+            case SignInOutcome.Disabled:
+                return TypedResults.Problem(
+                    title: "account_disabled",
+                    detail: "This account has been disabled.",
+                    statusCode: StatusCodes.Status403Forbidden);
+
+            // One answer for "no such account" and "wrong password" alike.
+            default:
+                return TypedResults.Unauthorized();
+        }
+    }
+
+    private static async Task<NoContent> SignOutAsync(HttpContext http)
+    {
+        await http.SignOutAsync(SessionCookie.Scheme);
+
+        return TypedResults.NoContent();
+    }
+
+    private static Results<Ok<SessionResponse>, UnauthorizedHttpResult> GetSession(ClaimsPrincipal principal)
+    {
+        var id = SessionCookie.UserIdOf(principal);
+
+        return id is null
+            ? TypedResults.Unauthorized()
+            : TypedResults.Ok(new SessionResponse(id.Value, principal.Identity?.Name ?? string.Empty));
     }
 
     /// <remarks>

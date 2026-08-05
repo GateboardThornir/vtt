@@ -14,6 +14,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddVttDatabase(connectionString);
 builder.Services.AddAccounts();
+builder.Services.AddSessionCookie(builder.Environment.IsDevelopment());
 
 // CanConnectAsync against the registered context, run per request to /api/health — no background
 // timer and no connection held open between probes.
@@ -34,6 +35,9 @@ if (CreateAccountCommand.Matches(args))
 {
     return await CreateAccountCommand.RunAsync(app.Services, args, Console.Out, ConsoleSecret.Read);
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapAccounts();
 
