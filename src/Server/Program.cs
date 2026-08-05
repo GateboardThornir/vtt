@@ -27,3 +27,9 @@ StartupLog.DatabaseConfigured(app.Logger, redactedConnectionString);
 app.MapHealthChecks("/api/health", new HealthCheckOptions { ResponseWriter = HealthCheckResponse.Write });
 
 app.Run();
+
+// Top-level statements compile to an internal entry-point class, which WebApplicationFactory<T>
+// cannot name. This declaration exists solely so the integration tests can boot the real
+// application (task 005). Preferred over [assembly: InternalsVisibleTo], which would open every
+// internal of this assembly to the test project and invite tests across module boundaries.
+public partial class Program;
