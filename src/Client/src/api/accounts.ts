@@ -86,6 +86,17 @@ export function register(
   })
 }
 
+export interface IssuedInvite {
+  id: string
+  token: string
+  expiresAt: string
+}
+
+/** Mints an invite. The token comes back once and is never recoverable afterwards. */
+export function issueInvite(): Promise<ApiResult<IssuedInvite>> {
+  return request<IssuedInvite>('/api/admin/invites', { method: 'POST' })
+}
+
 export function listAccounts(): Promise<ApiResult<AccountSummary[]>> {
   return request<AccountSummary[]>('/api/admin/accounts')
 }

@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -10,6 +11,8 @@ namespace Vtt.Server.Tests.Integration;
 [Trait("Category", "Integration")]
 public class InviteTests(PostgresFixture fixture) : IAsyncLifetime
 {
+    private const string Password = "a perfectly ordinary passphrase";
+
     private Guid _admin;
 
     public async Task InitializeAsync()
@@ -17,11 +20,15 @@ public class InviteTests(PostgresFixture fixture) : IAsyncLifetime
         await fixture.ResetAsync();
 
         // Invites carry foreign keys to users at both ends, so an account has to exist first.
-        // Whether that account is an administrator is task 016's question, not this service's.
-        var admin = User.Register("Admin", "hash", fixture.Clock.GetUtcNow());
+        await using var scope = NewScope();
+
+        var admin = User.CreateActive(
+            "Admin",
+            scope.Provider.GetRequiredService<IPasswordHasher>().Hash(Password),
+            fixture.Clock.GetUtcNow());
+
         _admin = admin.Id;
 
-        await using var scope = NewScope();
         scope.Context.Set<User>().Add(admin);
         await scope.Context.SaveChangesAsync();
     }
@@ -147,6 +154,34 @@ public class InviteTests(PostgresFixture fixture) : IAsyncLifetime
         Assert.Equal(Racers - 1, outcomes.Count(status => status == InviteStatus.AlreadyConsumed));
     }
 
+    [Fact]
+    public async Task AnAdministratorCanMintAnInviteOverHttp()
+    {
+        // The half of 011 that was missing until 017a: the service could always mint invites and
+        // nothing could reach it, so closing the loop needed SQL by hand.
+        using var client = fixture.CreateClient();
+        var signIn = await client.PostAsJsonAsync(
+            "/api/session",
+            new SignInRequest("Admin", Password));
+        Assert.Equal(System.Net.HttpStatusCode.OK, signIn.StatusCode);
+
+        var response = await client.PostAsJsonAsync("/api/admin/invites", new { });
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+
+        var issued = await response.Content.ReadFromJsonAsync<IssuedInvite>();
+        Assert.NotNull(issued);
+        Assert.Equal(InviteStatus.Ok, await ValidateAsync(issued.Token));
+    }
+
+    [Fact]
+    public async Task AMemberCannotMintAnInvite()
+    {
+        using var client = fixture.CreateClient();
+        var response = await client.PostAsJsonAsync("/api/admin/invites", new { });
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     private async Task<IssuedInvite> IssueAsync()
     {
         await using var scope = NewScope();
@@ -174,6 +209,8 @@ public class InviteTests(PostgresFixture fixture) : IAsyncLifetime
     private sealed class Scope(IServiceScope scope) : IAsyncDisposable
     {
         public VttDbContext Context { get; } = scope.ServiceProvider.GetRequiredService<VttDbContext>();
+
+        public IServiceProvider Provider { get; } = scope.ServiceProvider;
 
         public IInviteService Invites { get; } = scope.ServiceProvider.GetRequiredService<IInviteService>();
 

@@ -21,8 +21,23 @@ public static class AdminEndpoints
         group.MapPut("/{id:guid}/state", SetStateAsync);
         group.MapPost("/{id:guid}/recovery-code", IssueRecoveryCodeAsync);
 
+        endpoints
+            .MapPost("/api/admin/invites", IssueInviteAsync)
+            .RequireAuthorization(AccountPolicies.Administrator);
+
         return endpoints;
     }
+
+    /// <remarks>
+    /// The missing half of task 011: the service could mint invites from the first day and nothing
+    /// could reach it, so closing the loop needed SQL by hand. The plaintext is returned once and
+    /// is unrecoverable afterwards, which the screen has to make obvious.
+    /// </remarks>
+    private static async Task<Ok<IssuedInvite>> IssueInviteAsync(
+        ClaimsPrincipal principal,
+        IInviteService invites,
+        CancellationToken cancellationToken) =>
+        TypedResults.Ok(await invites.IssueAsync(SessionCookie.UserIdOf(principal)!.Value, cancellationToken));
 
     private static async Task<Ok<IReadOnlyList<AccountSummary>>> ListAllAsync(
         IAccountAdministration accounts,
