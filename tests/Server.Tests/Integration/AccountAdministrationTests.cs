@@ -20,7 +20,7 @@ public class AccountAdministrationTests(PostgresFixture fixture) : IAsyncLifetim
     /// needs the same converter. A test using the defaults would be reading a different contract
     /// from the one that ships.
     /// </remarks>
-    private static readonly JsonSerializerOptions JsonOptions =
+    private static readonly JsonSerializerOptions _jsonOptions =
         new(JsonSerializerDefaults.Web) { Converters = { new JsonStringEnumConverter() } };
 
     public Task InitializeAsync() => fixture.ResetAsync();
@@ -36,7 +36,7 @@ public class AccountAdministrationTests(PostgresFixture fixture) : IAsyncLifetim
         using var client = await SignedInAsync("Admin");
         var pending = await client.GetFromJsonAsync<List<AccountSummary>>(
             "/api/admin/accounts/pending",
-            JsonOptions);
+            _jsonOptions);
 
         Assert.Equal("Newcomer", Assert.Single(pending!).Username);
     }
