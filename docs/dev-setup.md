@@ -290,17 +290,46 @@ script is what turns it into the connection string the server expects.
 ```bash
 ./scripts/ef.sh database update       # create/update the schema — see below
 ./scripts/dev-server.sh
-curl http://localhost:5080/health
+curl http://localhost:5080/api/health
 # -> {"status":"Healthy","checks":{"database":"Healthy"}}
 ```
 
-A 200 from `/health` means the process is up **and** it can reach the database. Stop the container
-and the server keeps running, but `/health` turns into a 503 naming the check that failed. That is
+A 200 from `/api/health` means the process is up **and** it can reach the database. Stop the container
+and the server keeps running, but `/api/health` turns into a 503 naming the check that failed. That is
 the intended behaviour: an unreachable database is a condition to report, not a reason to crash.
 
 If the container never reaches "healthy", `docker compose logs postgres` says why. The usual causes
 are port 55432 already being in use, or a stale data volume from an earlier attempt —
 `docker compose down -v` clears the second one, at the price of the local data.
+
+### Start the frontend
+
+In a **second terminal**, leaving the server running in the first:
+
+```bash
+cd src/Client
+npm install          # first time only
+npm run dev
+```
+
+Open <http://localhost:5173>. The page fetches the health endpoint and reports what came back, so it
+doubles as a check that both halves of the stack are talking to each other. Three outcomes, all of
+them useful:
+
+| What you see | What it means |
+|---|---|
+| `Healthy`, database `Healthy` | Everything works |
+| `Unhealthy`, database `Unhealthy` | Frontend, proxy and server are fine; Postgres is not running |
+| Server unreachable | `scripts/dev-server.sh` is not running |
+
+There is deliberately **no script that starts both halves**. Two watchers interleaving their output
+into one terminal is harder to read than two windows, and the first thing you do when a combined
+script misbehaves is run the halves separately anyway.
+
+The frontend never calls port 5080 directly. `vite.config.ts` proxies `/api` to the server, so the
+browser only ever sees one origin — which is what will let the session cookies in task 013 work
+without CORS or a local HTTPS certificate. Always write relative paths (`/api/...`); anything
+hardcoding `localhost:5080` works here and breaks in production.
 
 ### Working with migrations
 
