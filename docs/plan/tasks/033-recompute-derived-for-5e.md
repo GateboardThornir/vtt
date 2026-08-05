@@ -1,6 +1,6 @@
 # 033 — `RecomputeDerived` for 5e
 
-**Status:** not started
+**Status:** done
 **Depends on:** 032
 **Branch:** `task/033-recompute-derived-for-5e`
 
