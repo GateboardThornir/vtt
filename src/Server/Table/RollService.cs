@@ -49,7 +49,7 @@ internal sealed class RollService(
         await context.SaveChangesAsync(cancellationToken);
 
         var username = await UsernameOfAsync(rollerUserId, cancellationToken);
-        var recipients = await RecipientsOf(campaignId.Value, rollerUserId, visibility, cancellationToken);
+        var recipients = await RecipientsOfAsync(campaignId.Value, rollerUserId, visibility, cancellationToken);
 
         return new RollBroadcast(Line(roll, rollerUserId, username, result.Kept, result.Dropped), recipients);
     }
@@ -116,7 +116,7 @@ internal sealed class RollService(
     /// not a redacted one and not a placeholder, because "somebody rolled something" still tells a
     /// player the Master is checking, which is exactly what a secret roll withholds.
     /// </remarks>
-    private async Task<IReadOnlyList<Guid>> RecipientsOf(
+    private async Task<IReadOnlyList<Guid>> RecipientsOfAsync(
         Guid campaignId,
         Guid rollerUserId,
         RollVisibility visibility,
