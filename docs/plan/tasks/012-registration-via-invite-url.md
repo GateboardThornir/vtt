@@ -1,6 +1,6 @@
 # 012 — Registration via invite URL
 
-**Status:** not started
+**Status:** done
 **Depends on:** 011 (a token to consume)
 **Branch:** `task/012-registration-via-invite-url`
 
