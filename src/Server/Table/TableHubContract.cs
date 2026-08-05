@@ -18,4 +18,10 @@ public interface ITableClient
 
     /// <summary>The full list, sent to a client when it joins.</summary>
     Task Participants(IReadOnlyList<Participant> participants);
+
+    /// <summary>Somebody said something.</summary>
+    Task ChatSaid(ChatLine line);
+
+    /// <summary>Recent history, sent to a client when it joins.</summary>
+    Task ChatHistory(IReadOnlyList<ChatLine> lines);
 }

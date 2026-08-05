@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 041 — Table text chat
+**Next task:** 042 — Dice expression parser + roller
 **Blocked on:** nothing
 
 ## Completed
@@ -45,6 +45,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 034 | Character entity | 2026-08-05 | First JSONB column. Every write validates against the campaign's **pinned** module then recomputes derived, in the service so no path can forget |
 | 035 | Character sheet UI | 2026-08-05 | Raw fields editable, derived shown read-only and taken from the server's answer after each save. Schema errors rendered against the field they name. The client computes no rule |
 | 040 | SignalR hub scaffold | 2026-08-05 | Authenticated by the same session cookie; group per open session; presence counted per account so a second tab does not announce an arrival. Hub tests drive a real connection over long polling |
+| 041 | Table text chat | 2026-08-05 | Persisted then broadcast; history on join. Admission is re-checked on every send, so somebody removed from the roster mid-session stops being able to talk |
 
 ## Deviations from the plan
 

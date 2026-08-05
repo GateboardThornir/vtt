@@ -1,6 +1,6 @@
 # 041 — Table text chat
 
-**Status:** not started
+**Status:** done
 **Depends on:** 040
 **Branch:** `task/041-table-text-chat`
 

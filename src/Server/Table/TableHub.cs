@@ -17,7 +17,10 @@ namespace Vtt.Server.Table;
 /// </para>
 /// </remarks>
 [Authorize(Policy = AccountPolicies.ActiveAccount)]
-public sealed class TableHub(ITableAccess access, ITableParticipants participants) : Hub<ITableClient>
+public sealed class TableHub(
+    ITableAccess access,
+    ITableParticipants participants,
+    IChatService chat) : Hub<ITableClient>
 {
     /// <summary>
     /// Joins the caller to a session's table.
@@ -51,12 +54,46 @@ public sealed class TableHub(ITableAccess access, ITableParticipants participant
 
         await Clients.Caller.Participants(alreadyHere);
 
+        var history = await chat.HistoryAsync(sessionId, participant.UserId);
+
+        if (history is not null)
+        {
+            await Clients.Caller.ChatHistory(history);
+        }
+
         if (participants.CountFor(sessionId, participant.UserId) == 1)
         {
             // Announced once per person, not once per tab.
             await Clients.OthersInGroup(TableGroups.ForSession(sessionId))
                 .ParticipantJoined(participant);
         }
+
+        return true;
+    }
+
+    /// <summary>Says something at the table.</summary>
+    /// <remarks>
+    /// Admission is re-checked inside the service on every call. A client that stays in the group
+    /// after losing its place on the roster gets nothing back and broadcasts nothing.
+    /// </remarks>
+    [HubMethodName("Say")]
+    public async Task<bool> SayAsync(Guid sessionId, string body, ChatVoice voice)
+    {
+        var userId = SessionCookie.UserIdOf(Context.User!);
+
+        if (userId is null)
+        {
+            return false;
+        }
+
+        var line = await chat.SayAsync(sessionId, userId.Value, body, voice);
+
+        if (line is null)
+        {
+            return false;
+        }
+
+        await Clients.Group(TableGroups.ForSession(sessionId)).ChatSaid(line);
 
         return true;
     }
