@@ -1,6 +1,6 @@
 # 003 — EF Core setup + initial migration
 
-**Status:** in review
+**Status:** done
 **Depends on:** 002
 **Branch:** `task/003-ef-core-setup-and-initial-migration`
 
