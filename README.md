@@ -37,14 +37,19 @@ cp .env.example .env          # then set POSTGRES_PASSWORD to anything you like
 docker compose up -d          # PostgreSQL, on host port 55432
 
 dotnet build
+./scripts/ef.sh database update   # brings the schema up to date
 ./scripts/dev-server.sh
 ```
 
 The server listens on <http://localhost:5080>. Confirm it is alive:
 
 ```bash
-curl http://localhost:5080/health     # -> Healthy
+curl http://localhost:5080/health
+# -> {"status":"Healthy","checks":{"database":"Healthy"}}
 ```
+
+A 200 means the server can also reach the database. If the database is unreachable the server still
+starts and serves, and `/health` returns 503 naming the check that failed.
 
 HTTP only in development — no local HTTPS certificate to install. TLS is terminated by Caddy in
 production.
@@ -77,6 +82,33 @@ applies credentials only while initialising an empty data directory; afterwards 
 stays in force and authentication fails as if you had mistyped it. The only fix is
 `docker compose down -v`, which discards the local database.
 
+### Database migrations
+
+The schema is versioned as EF Core migrations under `src/Server/Infrastructure/Migrations/`. They
+are **never applied automatically at startup** — see
+[ADR 003](docs/decisions/003-migrations-applied-explicitly.md).
+
+```bash
+./scripts/ef.sh migrations add AddSomething --output-dir Infrastructure/Migrations
+./scripts/ef.sh database update      # apply everything outstanding
+./scripts/ef.sh migrations list      # what exists, and what is applied
+```
+
+Read the generated migration before committing it. EF infers it from the difference between your
+model and the last snapshot, and it will happily generate a destructive column drop when you
+expected a rename.
+
+Getting one wrong is cheap **before** it is merged and expensive after:
+
+```bash
+./scripts/ef.sh database update 0    # revert to an empty database
+./scripts/ef.sh migrations remove    # delete the migration and roll back the snapshot
+```
+
+`migrations remove` refuses while the migration is still applied, which is the tool telling you to
+revert first. Once a migration is on `main` it is append-only: correct it with a *new* migration,
+never by editing the old one, because anyone who has already applied it will never re-run it.
+
 ### On Windows: keep the project inside WSL2
 
 Clone to a Linux path such as `~/projects/vtt`. **Never** work under `/mnt/c/...`. WSL2 can reach
@@ -92,6 +124,8 @@ mystifying, the cause is invisible, and the fix is always "move the project".
 | `docker compose down` | Stops it, keeping the data |
 | `docker compose down -v` | Stops it and deletes the data volume |
 | `./scripts/dev-server.sh` | Starts the server on port 5080, with `.env` loaded |
+| `./scripts/ef.sh database update` | Applies outstanding migrations |
+| `./scripts/ef.sh migrations add X --output-dir Infrastructure/Migrations` | Generates a migration |
 | `dotnet build` | Builds the solution. Warnings are errors — a warning fails the build |
 | `dotnet test` | Runs the backend test suite |
 | `dotnet format` | Applies the `.editorconfig` conventions |
