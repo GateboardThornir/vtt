@@ -26,14 +26,6 @@ public class Campaign
 
     public string Name { get; private set; } = null!;
 
-    /// <summary>The account that created it, and therefore its Master.</summary>
-    /// <remarks>
-    /// A column rather than a row in a membership table, because until task 021 a campaign has
-    /// exactly one member and there is nothing to join to. 021 introduces the roster and decides
-    /// whether the Master becomes a row in it or stays here.
-    /// </remarks>
-    public Guid MasterUserId { get; private set; }
-
     public string SystemId { get; private set; } = null!;
 
     public string SystemVersion { get; private set; } = null!;
@@ -45,9 +37,12 @@ public class Campaign
     /// anything: no registry exists until task 030. A hardcoded list here would be a second source
     /// of truth that 030 would then have to remove.
     /// </remarks>
+    /// <remarks>
+    /// Who masters it is not stored here. Task 021 moved that to the roster, because a column plus
+    /// a membership table means two sources of truth for one fact, and they eventually disagree.
+    /// </remarks>
     public static Campaign Create(
         string name,
-        Guid masterUserId,
         string systemId,
         string systemVersion,
         DateTimeOffset now) =>
@@ -55,7 +50,6 @@ public class Campaign
         {
             Id = Guid.CreateVersion7(),
             Name = name,
-            MasterUserId = masterUserId,
             SystemId = systemId,
             SystemVersion = systemVersion,
             CreatedAt = now,

@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Vtt.Server.Accounts;
 
 namespace Vtt.Server.Campaigns;
 
@@ -17,12 +16,5 @@ public class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
         builder.Property(campaign => campaign.SystemVersion).HasMaxLength(Campaign.SystemVersionMaxLength).IsRequired();
         builder.Property(campaign => campaign.CreatedAt).IsRequired();
 
-        builder.HasIndex(campaign => campaign.MasterUserId);
-
-        builder.HasOne<User>()
-            .WithMany()
-            .HasForeignKey(campaign => campaign.MasterUserId)
-            .OnDelete(DeleteBehavior.Restrict)
-            .IsRequired();
     }
 }
