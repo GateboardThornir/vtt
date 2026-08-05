@@ -1,5 +1,7 @@
 # VTT
 
+[![CI](https://github.com/GateboardThornir/vtt/actions/workflows/ci.yml/badge.svg)](https://github.com/GateboardThornir/vtt/actions/workflows/ci.yml)
+
 A private, invitation-only virtual tabletop for playing tabletop RPGs live over the internet:
 shared battlemaps, tokens, fog of war, dice, character sheets, chat and voice, with the server
 understanding and automating the rules of the game system in play.
@@ -145,6 +147,18 @@ the `Category` filter above is the escape hatch when it is not.
 
 Frontend tests run in jsdom with React Testing Library. Reasoning in
 [ADR 005](docs/decisions/005-integration-tests-against-a-real-database.md).
+
+### What CI enforces
+
+Every push runs `.github/workflows/ci.yml`: two parallel jobs covering the backend (build, tests
+including the container-backed integration suite, `dotnet format --verify-no-changes`) and the
+frontend (`lint`, `typecheck`, `test`, `build`).
+
+Every one of those is a command you can run locally in the same form. If CI is red, reproduce it on
+your machine rather than guessing — that is the whole reason no step does anything bespoke.
+
+Style is checked here and never in the build. A formatting violation should not fail a build in the
+middle of a task; see [ADR 001](docs/decisions/001-repository-layout-and-build-conventions.md).
 
 ### On Windows: keep the project inside WSL2
 
