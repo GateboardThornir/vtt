@@ -331,6 +331,31 @@ browser only ever sees one origin — which is what will let the session cookies
 without CORS or a local HTTPS certificate. Always write relative paths (`/api/...`); anything
 hardcoding `localhost:5080` works here and breaks in production.
 
+### Running the tests
+
+```bash
+dotnet test                                      # backend
+cd src/Client && npm run test                    # frontend
+```
+
+The backend suite has two halves. Most tests are ordinary unit tests and need nothing running. The
+ones in `tests/Server.Tests/Integration/` start **their own PostgreSQL container**, apply the
+migrations to it, boot the real application against it, and throw the container away at the end.
+
+That means two things worth internalising:
+
+- **`dotnet test` needs Docker running**, and will fail confusingly if it is not. When Docker is
+  unavailable, `dotnet test --filter "Category!=Integration"` runs the rest in about a fifth of a
+  second.
+- **The tests cannot damage your development database.** They never connect to the compose
+  container. You can run the suite in the middle of a session without thinking about it.
+
+Frontend tests use Vitest with jsdom — a simulated DOM, good enough to render components and query
+them the way a user would perceive them, and not good enough for anything involving real layout or
+a canvas. `npm run test:watch` reruns on save.
+
+Why a real database rather than a fast fake is [ADR 005](decisions/005-integration-tests-against-a-real-database.md).
+
 ### Working with migrations
 
 The database schema is not written by hand. You change the C# model, and EF Core generates a

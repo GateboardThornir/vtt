@@ -1,6 +1,6 @@
 # 005 — Test harness
 
-**Status:** not started
+**Status:** in review
 **Depends on:** 003 (a real database to test against), 004 (a frontend to test)
 **Branch:** `task/005-test-harness`
 
