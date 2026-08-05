@@ -3,4 +3,22 @@
   <!-- TargetFramework, Nullable and ImplicitUsings come from Directory.Build.props at the
        repository root and are deliberately not repeated here. -->
 
+  <ItemGroup>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+
+    <!-- Applies snake_case to tables, columns, keys, foreign keys and indexes as a real EF
+         convention rather than a post-pass over the built model, which is what makes it correct
+         for owned types and discriminators. See ADR 004. -->
+    <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
+
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.10" />
+
+    <!-- Design-time only: `dotnet ef` needs it to build migrations, the running server does not
+         ship it. PrivateAssets stops it flowing to anything referencing this project. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
 </Project>

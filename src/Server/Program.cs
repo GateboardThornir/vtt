@@ -6,6 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // confusing failure on the first request that needs the database.
 var connectionString = DatabaseConnectionString.Resolve(builder.Configuration);
 
+builder.Services.AddVttDatabase(connectionString);
+
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
