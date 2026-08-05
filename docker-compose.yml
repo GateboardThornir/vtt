@@ -13,13 +13,16 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?copy .env.example to .env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env}
       POSTGRES_DB: ${POSTGRES_DB:?copy .env.example to .env}
-      # The image's own default moved between majors. Pinning it to a subdirectory of the mount
-      # point keeps the named volume correct whichever major is in the tag above.
-      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "${POSTGRES_HOST_PORT:-55432}:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      # Mounted at the path the image declares as its VOLUME, not at the PGDATA subdirectory
+      # inside it. Mounting deeper also works, but Docker then creates an anonymous volume for the
+      # declared parent, and every `compose down` leaves one behind for good.
+      # PGDATA is left at the image default, which on 18 is /var/lib/postgresql/18/docker — the
+      # major in the path is deliberate on the image's part: an upgrade cannot silently reuse the
+      # old cluster.
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       # "$$" escapes compose interpolation so the variables are expanded inside the container.
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
