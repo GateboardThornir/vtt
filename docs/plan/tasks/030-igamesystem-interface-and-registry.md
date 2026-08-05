@@ -1,6 +1,6 @@
 # 030 — `IGameSystem` interface + registry
 
-**Status:** not started
+**Status:** done
 **Depends on:** 024
 **Branch:** `task/030-igamesystem-interface-and-registry`
 

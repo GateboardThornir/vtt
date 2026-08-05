@@ -9,7 +9,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 ## Current state
 
 **Phase:** 1 — First playable (Phase 0 complete)
-**Next task:** 030 — `IGameSystem` interface + registry
+**Next task:** 031 — JSON schema validation infrastructure
 **Blocked on:** nothing
 
 ## Completed
@@ -38,6 +38,7 @@ Keep entries short. One line per task, plus notes only where something surprisin
 | 022 | In-app notifications | 2026-08-05 | The only channel the platform has, since it collects no email. Payload is a kind plus one parameter, never a sentence, so it can be translated. Marking read is scoped by recipient inside the UPDATE |
 | 023 | Campaign list and detail UI | 2026-08-05 | Campaign list, detail with roster, invitations, notification bell. The API client split out of `accounts.ts` so each module owns its own calls |
 | 024 | Session entity | 2026-08-05 | Create, open, close. One open session per campaign enforced by a partial unique index — verified by trying to break it in raw SQL. Named `PlaySession` to stay distinct from the sign-in session |
+| 030 | `IGameSystem` interface + registry | 2026-08-05 | The seam between platform and game. Validates the pin 020 stored unchecked. `Resolve` deferred to 061 — its parameter types are built there |
 
 ## Deviations from the plan
 
@@ -47,6 +48,7 @@ worse than no plan.
 | Task | What changed | Why |
 |---|---|---|
 | 004 | i18next infrastructure moved from 098 to 017; 098 keeps full IT + EN coverage and the switcher | `.claude/rules/frontend.md` requires a translation layer from the first line of UI code, and the spec wants the infrastructure from the first release — but the roadmap parked it in Phase 3. Leaving it at 098 would ship every Phase 1 and 2 screen with hardcoded strings and turn 098 into archaeology. 017 is the first screen a user actually reads, so it lands there. 004 itself ships no i18next: its page is a diagnostic that 017 deletes |
+| 030 | `IGameSystem.Resolve` deferred from 030 to 061 | The binding contract declares `Resolve(GameIntent, TableState)`, and neither type exists — they are built by 060 and 061. Defining them at 030 would mean inventing the intent envelope and the whole live table state six tasks before anything consumes either, and almost certainly getting both wrong. Everything else in the contract ships at 030 |
 | 016 | The campaign-role resolver moved from 016 to 021 | The roadmap paired it with the platform-role policy, but campaigns arrive at 020 and membership at 021, so a resolver written at 016 would have no table to read, no consumer and no test that exercises it. 016 ships the platform half; 021 builds the campaign half where it is first needed |
 | 014 | The platform-role column moved from 016 to 014 | 010 deferred it as speculative because nothing read it. 014's approval queue must enforce against it, and a task cannot own a column an earlier task already depends on. 016 keeps what it was for: the policy infrastructure and the campaign-role resolver |
 | 004 | `GET /health` became `GET /api/health` | One proxy prefix in development and one Caddy rule at 101. A root-level path would also be swallowed by the SPA's index.html fallback for unknown routes unless special-cased |

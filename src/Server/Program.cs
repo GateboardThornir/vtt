@@ -5,6 +5,7 @@ using Vtt.Server.Campaigns;
 using Vtt.Server.Infrastructure;
 using Vtt.Server.Notifications;
 using Vtt.Server.Sessions;
+using Vtt.Server.Systems;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.AddAccounts();
 builder.Services.AddCampaigns();
 builder.Services.AddNotifications();
 builder.Services.AddPlaySessions();
+builder.Services.AddGameSystems();
 builder.Services.AddSessionCookie(builder.Environment.IsDevelopment());
 
 // Enums travel as their names, not their ordinals. A payload saying "state": 1 forces every client

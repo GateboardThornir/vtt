@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Vtt.Server.Accounts;
+using Vtt.Server.Systems;
 
 namespace Vtt.Server.Campaigns;
 
@@ -98,6 +99,7 @@ public static class CampaignEndpoints
         CreateCampaignRequest request,
         ClaimsPrincipal principal,
         ICampaignService campaigns,
+        IGameSystemRegistry systems,
         CancellationToken cancellationToken)
     {
         if (!CampaignRules.IsWellFormedName(request.Name))
@@ -108,6 +110,14 @@ public static class CampaignEndpoints
         if (!CampaignRules.IsWellFormedSystem(request.SystemId, request.SystemVersion))
         {
             return TypedResults.BadRequest("system_invalid");
+        }
+
+        // Task 020 stored the pin without checking it, deliberately: a hardcoded list of known
+        // systems would have been a second source of truth that this registry then had to remove.
+        // The registry is that source of truth, so the check lives here now.
+        if (!systems.IsKnown(request.SystemId!, request.SystemVersion!))
+        {
+            return TypedResults.BadRequest("system_unknown");
         }
 
         var created = await campaigns.CreateAsync(
